@@ -9,7 +9,7 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 import {icons, Insets, Popup, Resizable, scout, WidgetPopupLayout} from '../index';
-import $ from 'jquery';
+import * as $ from 'jquery';
 import graphics from '../layout/graphics';
 
 export default class WidgetPopup extends Popup {

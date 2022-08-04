@@ -9,7 +9,7 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 import {arrays, DeferredGlassPaneTarget, Desktop, Device, Event, EventDelegator, EventSupport, filters, focusUtils, Form, graphics, icons, inspector, objects, scout, scrollbars, strings, texts, TreeVisitResult} from '../index';
-import $ from 'jquery';
+import * as $ from 'jquery';
 
 export default class Widget {
   constructor() {

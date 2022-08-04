@@ -14,6 +14,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const AfterEmitWebpackPlugin = require('./AfterEmitWebpackPlugin');
 const {SourceMapDevToolPlugin, WatchIgnorePlugin, ProgressPlugin} = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 
 /**
  * @param {string} args.mode development or production
@@ -101,6 +102,10 @@ module.exports = (env, args) => {
       'url': 'url',
       'zlib': 'zlib'
     },
+    externalsType: 'module',
+    experiments: {
+      outputModule: true
+    },
     output: {
       filename: jsFilename,
       path: outDir,
@@ -157,6 +162,7 @@ module.exports = (env, args) => {
         }]
       }, {
         test: /\.jsx?$/,
+        exclude: /node_modules/,
         use: [{
           loader: require.resolve('babel-loader'),
           options: babelOptions
@@ -183,7 +189,11 @@ module.exports = (env, args) => {
       }]
     },
     plugins: [
-      new WatchIgnorePlugin({paths: [/\.d\.ts$/]}),
+      new WatchIgnorePlugin({
+        paths: [
+          /\.d\.ts$/
+        ]
+      }),
       // see: extracts css into separate files
       new MiniCssExtractPlugin({filename: cssFilename}),
       // run post-build script hook
@@ -199,6 +209,7 @@ module.exports = (env, args) => {
       })
     ],
     optimization: {
+      minimize: !devMode,
       splitChunks: {
         chunks: 'all',
         name: (module, chunks, cacheGroupKey) => computeChunkName(module, chunks, cacheGroupKey)
@@ -223,16 +234,25 @@ module.exports = (env, args) => {
       // minify css
       new CssMinimizerPlugin({
         test: /\.min\.css$/g,
+        parallel: false,
+        minify: CssMinimizerPlugin.esbuildMinify,
         minimizerOptions: {
-          preset: ['default', {
-            discardComments: {removeAll: true}
-          }]
+          sourcemap: 'external',
+          target: 'es6',
+          charset: 'utf8'
         }
       }),
       // minify js
       new TerserPlugin({
         test: /\.js(\?.*)?$/i,
-        parallel: 4
+        exclude: /node_modules/,
+        parallel: false, /* parallelism has almost no benefit in time but needs more memory for esbuildMinify. For terser parallel=4 leads to the best results */
+        minify: TerserPlugin.esbuildMinify,
+        terserOptions: {
+          sourcemap: 'external',
+          target: 'es6',
+          charset: 'utf8'
+        }
       })
     ];
   }

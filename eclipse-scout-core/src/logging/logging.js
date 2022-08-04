@@ -9,7 +9,7 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 import {NullLogger, scout, URL} from '../index';
-import $ from 'jquery';
+import * as $ from 'jquery';
 import strings from '../util/strings';
 
 const Level = {
