@@ -41,21 +41,7 @@ module.exports = (env, args) => {
       });
   }
 
-  const babelOptions = {
-    compact: false,
-    cacheDirectory: true,
-    cacheCompression: false,
-    presets: [
-      [require.resolve('@babel/preset-env'), {
-        debug: false,
-        targets: {
-          firefox: '69',
-          chrome: '71',
-          safari: '12.1'
-        }
-      }]
-    ]
-  };
+  const targetBrowsers = ['firefox69', 'chrome71', 'safari12.1'];
 
   const config = {
     target: 'web',
@@ -147,19 +133,26 @@ module.exports = (env, args) => {
           }
         }]
       }, {
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        use: [{
+          loader: require.resolve('esbuild-loader'),
+          options: {
+            target: targetBrowsers,
+            sourcemap: true,
+            loader: 'js'
+          }
+        }]
+      }, {
         test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [{
-          loader: require.resolve('babel-loader'),
-          options: babelOptions
-        }, {
-          loader: require.resolve('ts-loader')
-        }]
-      }, {
-        test: /\.jsx?$/,
-        use: [{
-          loader: require.resolve('babel-loader'),
-          options: babelOptions
+          loader: require.resolve('esbuild-loader'),
+          options: {
+            target: targetBrowsers,
+            sourcemap: true,
+            loader: 'ts'
+          }
         }]
       }, {
         test: /\.jsx?$/,
@@ -183,7 +176,11 @@ module.exports = (env, args) => {
       }]
     },
     plugins: [
-      new WatchIgnorePlugin({paths: [/\.d\.ts$/]}),
+      new WatchIgnorePlugin({
+        paths: [
+          /\.d\.ts$/
+        ]
+      }),
       // see: extracts css into separate files
       new MiniCssExtractPlugin({filename: cssFilename}),
       // run post-build script hook
@@ -199,6 +196,7 @@ module.exports = (env, args) => {
       })
     ],
     optimization: {
+      minimize: !devMode,
       splitChunks: {
         chunks: 'all',
         name: (module, chunks, cacheGroupKey) => computeChunkName(module, chunks, cacheGroupKey)
@@ -217,22 +215,13 @@ module.exports = (env, args) => {
   }
 
   if (!devMode) {
-    const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-    const TerserPlugin = require('terser-webpack-plugin');
+    const {ESBuildMinifyPlugin} = require('esbuild-loader');
     config.optimization.minimizer = [
-      // minify css
-      new CssMinimizerPlugin({
-        test: /\.min\.css$/g,
-        minimizerOptions: {
-          preset: ['default', {
-            discardComments: {removeAll: true}
-          }]
-        }
-      }),
-      // minify js
-      new TerserPlugin({
-        test: /\.js(\?.*)?$/i,
-        parallel: 4
+      new ESBuildMinifyPlugin({
+        target: targetBrowsers,
+        sourcemap: true,
+        minify: true,
+        css: true
       })
     ];
   }
