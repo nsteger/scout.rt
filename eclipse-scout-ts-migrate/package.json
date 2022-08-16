@@ -1,0 +1,44 @@
+{
+  "name": "@eclipse-scout/ts-migrate",
+  "version": "23.1.0-snapshot",
+  "description": "TypeScript migration module",
+  "author": "BSI Business Systems Integration AG",
+  "homepage": "https://www.eclipse.org/scout",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eclipse-scout/scout.rt.git"
+  },
+  "license": "EPL-1.0",
+  "engines": {
+    "node": ">=16.13.0",
+    "npm": ">=8.1.0",
+    "pnpm": ">=6.22.2"
+  },
+  "keywords": [
+    "scout",
+    "eclipse-scout",
+    "typescript"
+  ],
+  "files": [
+    "bin",
+    "scripts"
+  ],
+  "bin": {
+    "ts-migrate": "bin/ts-migrate.mjs"
+  },
+  "scripts": {
+    "ts-migrate": "node bin/ts-migrate"
+  },
+  "dependencies": {
+    "ts-migrate": "0.1.31",
+    "ts-migrate-plugins": "0.1.31",
+    "ts-migrate-server": "0.1.31",
+    "yargs-parser": "21.1.1",
+    "jscodeshift": "0.13.1"
+  },
+  "devDependencies": {
+    "@types/jscodeshift": "^0.11.2",
+    "@types/yargs": "^13.0.3",
+    "typescript": "4.7.2"
+  }
+}
