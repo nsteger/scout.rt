@@ -2,14 +2,14 @@
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax */
 import path from 'path';
-import {jsDocPlugin, eslintFixPlugin} from 'ts-migrate-plugins';
+import {eslintFixPlugin, jsDocPlugin} from 'ts-migrate-plugins';
 import {migrate, MigrateConfig} from 'ts-migrate-server';
 import renameModule from 'ts-migrate/build/commands/rename.js';
 import parser from 'yargs-parser';
-import encodeEmptyLinesPlugin from "./encodeEmptyLinesPlugin.mjs";
-import memberAccessModifierPlugin from "./memberAccessModifierPlugin.mjs";
-import decodeEmptyLinesPlugin from "./decodeEmptyLinesPlugin.mjs";
-import declareMissingClassPropertiesPlugin from "./declareMissingClassProperties.mjs";
+import convertToCRLFPlugin from '../src/convertToCRLFPlugin.js';
+import memberAccessModifierPlugin from '../src/memberAccessModifierPlugin.js';
+import convertToLFPlugin from '../src/convertToLFPlugin.js';
+import declareMissingClassPropertiesPlugin from '../src/declareMissingClassProperties.js';
 
 const rename = renameModule.default; // Default imports don't work as expected when importing from cjs modules
 
@@ -23,7 +23,7 @@ const args = parser(process.argv);
 
 const defaultAccessibility = undefined;
 const privateRegex = undefined;
-const protectedRegex = "_";
+const protectedRegex = '_';
 const publicRegex = undefined;
 const anyAlias = undefined;
 const rootDir = path.resolve(process.cwd());
@@ -36,17 +36,17 @@ const typeMap = {
   }
 };
 
-// const renamedFiles = rename({ rootDir, sources });
-// if (renameOnly) {
-//   process.exit(-1);
-// }
+const renamedFiles = rename({rootDir, sources});
+if (renameOnly) {
+  process.exit(-1);
+}
 
 if (sources) {
   if (!Array.isArray(sources)) {
     sources = [sources];
   }
   sources = sources.map(source => {
-    source = source.replace(/(.js)$/, '.ts')
+    source = source.replace(/(.js)$/, '.ts');
     if (!source.endsWith('.ts')) {
       source += '.ts';
     }
@@ -57,22 +57,22 @@ if (sources) {
 const config = new MigrateConfig()
   // .addPlugin(stripTSIgnorePlugin, {})
   // .addPlugin(hoistClassStaticsPlugin, { anyAlias })
-  .addPlugin(encodeEmptyLinesPlugin, {})
-  .addPlugin(declareMissingClassPropertiesPlugin, { anyAlias })
-  .addPlugin(memberAccessModifierPlugin, { })
+  .addPlugin(convertToCRLFPlugin, {})
+  .addPlugin(declareMissingClassPropertiesPlugin, {anyAlias})
+  .addPlugin(memberAccessModifierPlugin, {})
   // .addPlugin(memberAccessibilityPlugin, {
   //   defaultAccessibility,
   //   privateRegex,
   //   protectedRegex,
   //   publicRegex
   // })
-  .addPlugin(jsDocPlugin, {anyAlias, typeMap})
-  .addPlugin(decodeEmptyLinesPlugin, {})
+  .addPlugin(jsDocPlugin, {anyAlias, typeMap, annotateReturns: true})
+  .addPlugin(convertToLFPlugin, {})
   // .addPlugin(explicitAnyPlugin, {anyAlias})
 // .addPlugin(addConversionsPlugin, { anyAlias })
 // .addPlugin(tsIgnorePlugin, {})
 // We need to run eslint-fix again after ts-ignore to fix up formatting.
   // Fixes most of the formatting issues but not all -> run format code afterwards manually in IntelliJ
- .addPlugin(eslintFixPlugin, {});
+  .addPlugin(eslintFixPlugin, {});
 
 migrate({rootDir, config, sources}).then(exitCode => process.exit(exitCode));

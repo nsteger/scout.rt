@@ -27,3 +27,6 @@ by a custom implementation.
 The plugin `declareMissingClassProperties` also has some limitations. It was copied and adjusted to our needs.
 - Only consider members defined in the constructor because others have most likely already been defined in the super class.
 - Add types based on value and naming convention.
+
+An alternative to the crlf plugins should be to pass the lineTerminator to recast `.toSource({lineTerminator: '\n'});`.
+But it somehow does not work and would need more investigation...
