@@ -8,4 +8,12 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-type Predicate<T> = (obj: T) => boolean;
+
+export type Predicate<T> = (obj: T) => boolean;
+
+// Type that makes some properties optional and some required. TODO CGU move to separate file in util
+export type PartialAndRequired<T, OPTIONAL extends keyof T, REQUIRED extends keyof T> = Omit<T, OPTIONAL | REQUIRED> & Partial<Pick<T, OPTIONAL>> & Required<Pick<T, REQUIRED>>;
+
+export type EnumObject<TYPE> = TYPE[keyof TYPE];
+
+export type EnumObject<TYPE> = TYPE[keyof TYPE];
