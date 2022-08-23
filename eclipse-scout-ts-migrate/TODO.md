@@ -1,3 +1,4 @@
+
 code mig tasks
 
 . objects.isFunction -> typeof 'function'
@@ -7,3 +8,5 @@ code mig tasks
 . htmlComp variables -> HtmlComponent
 . type $ -> JQuery, jsdoc plugin map
 . sort member fields correctly
+. Parameter with $ -> JQuery type
+. Methods with $ -> return JQuery type. worth it?

@@ -10,16 +10,16 @@ import convertToCRLFPlugin from '../src/convertToCRLFPlugin.js';
 import memberAccessModifierPlugin from '../src/memberAccessModifierPlugin.js';
 import convertToLFPlugin from '../src/convertToLFPlugin.js';
 import declareMissingClassPropertiesPlugin from '../src/declareMissingClassProperties.js';
+// import countMethodsPlugin from '../src/countMethodsPlugin.js';
 
 const rename = renameModule.default; // Default imports don't work as expected when importing from cjs modules
 
-const args = parser(process.argv);
-
-// const path = require("path");
-// const eslintFixPlugin = require("ts-migrate-plugins/build/src/plugins/eslint-fix")
-// const memberAccessibilityPlugin = require("ts-migrate-plugins/build/src/plugins/member-accessibility")
-// const migrate = require("ts-migrate-server/build/src/migrate");
-// const MigrateConfig = require("ts-migrate-server/build/src/migrate/MigrateConfig");
+const yargsOptions = {
+  boolean: ['rename', 'renameOnly',],
+  array: ['sources'],
+  default: {'rename': true, renameOnly: false}
+};
+const args = parser(process.argv, yargsOptions);
 
 const defaultAccessibility = undefined;
 const privateRegex = undefined;
@@ -27,24 +27,16 @@ const protectedRegex = '_';
 const publicRegex = undefined;
 const anyAlias = undefined;
 const rootDir = path.resolve(process.cwd());
-let sources = args.sources;
-const renameOnly = args.renameOnly;
-const typeMap = {
-  function: {
-    tsName: 'Function',
-    acceptsTypeParameters: false
-  }
-};
 
-const renamedFiles = rename({rootDir, sources});
-if (renameOnly) {
+if (args.rename) {
+  rename({rootDir, sources});
+}
+if (args.renameOnly) {
   process.exit(-1);
 }
 
+let sources = args.sources;
 if (sources) {
-  if (!Array.isArray(sources)) {
-    sources = [sources];
-  }
   sources = sources.map(source => {
     source = source.replace(/(.js)$/, '.ts');
     if (!source.endsWith('.ts')) {
@@ -54,7 +46,15 @@ if (sources) {
   });
 }
 
+const typeMap = {
+  function: {
+    tsName: 'Function',
+    acceptsTypeParameters: false
+  }
+};
+
 const config = new MigrateConfig()
+  // .addPlugin(countMethodsPlugin);
   // .addPlugin(stripTSIgnorePlugin, {})
   // .addPlugin(hoistClassStaticsPlugin, { anyAlias })
   .addPlugin(convertToCRLFPlugin, {})
