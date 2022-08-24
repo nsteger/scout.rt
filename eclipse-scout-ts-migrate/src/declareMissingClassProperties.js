@@ -2,7 +2,7 @@ import jscodeshift from 'jscodeshift';
 import {hasDefaultImportSpecifier} from '@codeshift/utils';
 import {validateAnyAliasOptions} from 'ts-migrate-plugins/build/src/utils/validateOptions.js';
 import {isDiagnosticWithLinePosition} from 'ts-migrate-plugins/build/src/utils/type-guards.js';
-import {findParentPath, findParentClassBody, getTypeFor, inConstructor} from './common.js';
+import {findParentPath, findParentClassBody, getTypeFor, inConstructor, defaultParamTypeMap} from './common.js';
 
 /**
  * Based on https://github.com/airbnb/ts-migrate/blob/master/packages/ts-migrate-plugins/src/plugins/declare-missing-class-properties.ts
@@ -14,7 +14,7 @@ let root;
 let referencedTypes = new Set();
 
 /**
- * @type import('ts-migrate-server').Plugin<{ anyAlias?: string }>
+ * @type import('ts-migrate-server').Plugin<{ anyAlias?: string, typeMap?: object }>
  */
 const declareMissingClassPropertiesPlugin = {
   name: 'declare-missing-class-properties',
@@ -28,6 +28,7 @@ const declareMissingClassPropertiesPlugin = {
     root = j(text);
 
     const toAdd = [];
+    const typeMap = {...defaultParamTypeMap, ...options.typeMap};
 
     diagnostics.forEach(diagnostic => {
       root
@@ -51,7 +52,7 @@ const declareMissingClassPropertiesPlugin = {
             }
 
             let assignment = findParentPath(path, parentPath => parentPath.node.type === 'AssignmentExpression');
-            let type = getTypeFor(path.node.name, assignment.node.right);
+            let type = getTypeFor(j, path.node.name, assignment.node.right, Object.values(typeMap));
             if (type && type.type === 'TSTypeReference') {
               referencedTypes.add(type);
             }
@@ -96,7 +97,7 @@ const declareMissingClassPropertiesPlugin = {
 
     for (const type of referencedTypes) {
       // if (type.typeName.name === 'JQuery' && !hasDefaultImportSpecifier(j, root, 'jquery')) {
-      //   addDefaultImport('$', 'jquery');
+      //   addDefaultImport(j, root, '$', 'jquery');
       // }
       // TODO ts
     }

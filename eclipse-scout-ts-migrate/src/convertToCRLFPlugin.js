@@ -3,6 +3,9 @@
  */
 import {lfToCrlf} from './common.js';
 
+/**
+ * @type import('ts-migrate-server').Plugin<{}>
+ */
 const convertToCRLFPlugin = {
   name: 'convert-to-crlf',
 

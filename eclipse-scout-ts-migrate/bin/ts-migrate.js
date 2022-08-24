@@ -10,7 +10,7 @@ import convertToCRLFPlugin from '../src/convertToCRLFPlugin.js';
 import memberAccessModifierPlugin from '../src/memberAccessModifierPlugin.js';
 import convertToLFPlugin from '../src/convertToLFPlugin.js';
 import declareMissingClassPropertiesPlugin from '../src/declareMissingClassProperties.js';
-// import countMethodsPlugin from '../src/countMethodsPlugin.js';
+import methodsPlugin from '../src/methodsPlugin.js';
 
 const rename = renameModule.default; // Default imports don't work as expected when importing from cjs modules
 
@@ -27,6 +27,7 @@ const protectedRegex = '_';
 const publicRegex = undefined;
 const anyAlias = undefined;
 const rootDir = path.resolve(process.cwd());
+let sources = args.sources;
 
 if (args.rename) {
   rename({rootDir, sources});
@@ -35,7 +36,6 @@ if (args.renameOnly) {
   process.exit(-1);
 }
 
-let sources = args.sources;
 if (sources) {
   sources = sources.map(source => {
     source = source.replace(/(.js)$/, '.ts');
@@ -58,6 +58,7 @@ const config = new MigrateConfig()
   // .addPlugin(stripTSIgnorePlugin, {})
   // .addPlugin(hoistClassStaticsPlugin, { anyAlias })
   .addPlugin(convertToCRLFPlugin, {})
+  .addPlugin(jsDocPlugin, {anyAlias, typeMap, annotateReturns: true})
   .addPlugin(declareMissingClassPropertiesPlugin, {anyAlias})
   .addPlugin(memberAccessModifierPlugin, {})
   // .addPlugin(memberAccessibilityPlugin, {
@@ -66,7 +67,7 @@ const config = new MigrateConfig()
   //   protectedRegex,
   //   publicRegex
   // })
-  .addPlugin(jsDocPlugin, {anyAlias, typeMap, annotateReturns: true})
+  .addPlugin(methodsPlugin, {})
   .addPlugin(convertToLFPlugin, {})
   // .addPlugin(explicitAnyPlugin, {anyAlias})
 // .addPlugin(addConversionsPlugin, { anyAlias })
