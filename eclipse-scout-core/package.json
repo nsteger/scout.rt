@@ -26,7 +26,7 @@
     "src"
   ],
   "scripts": {
-    "ts-migrate": "ts-migrate --sources src/widget/**/*",
+    "ts-migrate": "ts-migrate --rename false --sources src/**/*",
     "testserver:start": "scout-scripts test-server:start",
     "testserver:stop": "scout-scripts test-server:stop",
     "test:ci": "scout-scripts test:ci",
