@@ -1,20 +1,23 @@
 import jscodeshift from 'jscodeshift';
-import {defaultParamTypeMap, defaultReturnTypeMap, createType, methodFilter} from './common.js';
+import {defaultModuleMap, defaultParamTypeMap, defaultRecastOptions, defaultReturnTypeMap, findTypeByName, insertMissingImportsForTypes, methodFilter} from './common.js';
 
 const j = jscodeshift.withParser('ts');
-
+let referencedTypes;
 
 /**
- * @type import('ts-migrate-server').Plugin<{paramTypeMap?: object, returnTypeMap?: object}>
+ * @type import('ts-migrate-server').Plugin<{paramTypeMap?: object, returnTypeMap?: object, moduleMap?: object}>
  */
 const methodsPlugin = {
   name: 'methods-plugin',
 
   async run({text, options}) {
-    const root = j(text);
+    let root = j(text);
     const paramTypeMap = {...defaultParamTypeMap, ...options.paramTypeMap};
     const returnTypeMap = {...defaultReturnTypeMap, ...options.returnTypeMap};
-    return root.find(j.Declaration)
+    const moduleMap = {...defaultModuleMap, ...options.moduleMap};
+    referencedTypes = new Set();
+
+    root.find(j.Declaration)
       .filter(path => methodFilter(j, path))
       .forEach(expression => {
         let node = expression.node;
@@ -24,8 +27,10 @@ const methodsPlugin = {
           }
         }
         processReturnType(node, Object.values(returnTypeMap));
+      });
 
-      }).toSource();
+    insertMissingImportsForTypes(j, root, Array.from(referencedTypes), moduleMap);
+    return root.toSource(defaultRecastOptions);
   }
 };
 
@@ -34,9 +39,12 @@ function processReturnType(func, typeMaps) {
   if (func.returnType) {
     return;
   }
-  let type = createType(typeMaps, name);
-  if (type) {
-    func.returnType = type;
+  let typeDesc = findTypeByName(j, typeMaps, name);
+  if (typeDesc) {
+    func.returnType = j.tsTypeAnnotation(typeDesc.type);
+    if (typeDesc.module) {
+      referencedTypes.add(typeDesc);
+    }
   }
 }
 
@@ -45,9 +53,12 @@ function processParamType(param, typeMaps) {
   if (param.typeAnnotation) {
     return;
   }
-  let type = createType(j, typeMaps, name);
-  if (type) {
-    param.typeAnnotation = type;
+  let typeDesc = findTypeByName(j, typeMaps, name);
+  if (typeDesc) {
+    param.typeAnnotation = j.tsTypeAnnotation(typeDesc.type);
+    if (typeDesc.module) {
+      referencedTypes.add(typeDesc);
+    }
   }
 }
 

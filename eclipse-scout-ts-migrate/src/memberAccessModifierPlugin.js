@@ -1,4 +1,5 @@
 import jscodeshift from 'jscodeshift';
+import {defaultRecastOptions} from './common.js';
 
 const j = jscodeshift.withParser('ts');
 
@@ -14,12 +15,15 @@ const memberAccessModifierPlugin = {
     return root.find(j.Declaration)
       .filter(path => path.node.type === j.ClassMethod.name || path.node.type === j.ClassProperty.name)
       .forEach(expression => {
+        if (expression.node.accessibility) {
+          return;
+        }
         let name = expression.node.key.name;
         if (name && name.startsWith('_')) {
           expression.node.accessibility = 'protected';
         }
-      }).toSource();
-  },
+      }).toSource(defaultRecastOptions);
+  }
 };
 
 export default memberAccessModifierPlugin;

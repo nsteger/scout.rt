@@ -1,4 +1,4 @@
-// import {createProject} from '@ts-morph/bootstrap';
+// Copied from https://github.com/airbnb/ts-migrate (MIT License)
 import ts from 'typescript';
 import path from 'path';
 const __dirname = path.resolve();
@@ -59,26 +59,3 @@ export function mockDiagnostic(
     ...overrides
   };
 }
-
-// export async function realPluginParams(params) {
-//   const {fileName = 'file.ts', text = '', options = {}} = params;
-//
-//   const project = await createProject({
-//     compilerOptions: {
-//       strict: true
-//     },
-//     useInMemoryFileSystem: true
-//   });
-//   const sourceFile = project.createSourceFile(fileName, text);
-//
-//   const getLanguageService = () => project.getLanguageService();
-//
-//   return {
-//     options: options,
-//     fileName,
-//     rootDir: __dirname,
-//     text,
-//     sourceFile,
-//     getLanguageService
-//   };
-// }

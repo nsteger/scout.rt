@@ -26,7 +26,6 @@ class C {
     protected get _protectedGetter() {}
     protected set _protectedSetter(v) {}
     public _looksProtected() {}
-}
-`);
+}`);
   });
 });
