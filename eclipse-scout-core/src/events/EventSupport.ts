@@ -8,17 +8,21 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {arrays, objects, scout} from '../index';
+import {arrays, Event, EventHandler, EventListener, objects, scout} from '../index';
 import $ from 'jquery';
 
+type EventSubTypePredicate = (type, subType) => boolean;
+
 export default class EventSupport {
+  protected _eventListeners: EventListener[];
+  protected _subTypePredicates: EventSubTypePredicate[];
 
   constructor() {
     this._eventListeners = [];
     this._subTypePredicates = objects.createMap();
   }
 
-  _assertFunc(func) {
+  protected _assertFunc(func: EventHandler<Event>) {
     if (!func) {
       throw new Error('Missing callback function');
     }
@@ -27,12 +31,12 @@ export default class EventSupport {
   /**
    * Registers the given event handler for the event specified by the type param.
    *
-   * @param {string} type One or more event names separated by space.
-   * @param {function} func Event handler executed when the event is triggered. An event object is passed to the function as first parameter.
-   * @param {function} [origFunc] (optional) used internally when func is registered with one(). The property is set on the listener
+   * @param type One or more event names separated by space.
+   * @param func Event handler executed when the event is triggered. An event object is passed to the function as first parameter.
+   * @param origFunc Used internally when func is registered with {@link one}. The property is set on the listener
    *   object so the event-handler can be de-registered by using the original function.
    */
-  on(type, func, origFunc) {
+  on(type: string, func: EventHandler<Event>, origFunc?: EventHandler<Event>): EventListener {
     this._assertFunc(func);
     let listener = {
       type: type,
@@ -47,10 +51,10 @@ export default class EventSupport {
    * Registers the given event handler for the event specified by the type param.
    * The function will only be called once. After that it is automatically de-registered using {@link off}.
    *
-   * @param {string} type One or more event names separated by space.
-   * @param {function} func Event handler executed when the event is triggered. An event object is passed to the function as first parameter
+   * @param type One or more event names separated by space.
+   * @param func Event handler executed when the event is triggered. An event object is passed to the function as first parameter
    */
-  one(type, func) {
+  one(type: string, func: EventHandler<Event>): EventListener {
     this._assertFunc(func);
     let offFunc = event => {
       this.off(type, offFunc);
@@ -62,12 +66,12 @@ export default class EventSupport {
   /**
    * De-registers the given event handler for the event specified by the type param.
    *
-   * @param {string} type One or more event names separated by space.<br/>
+   * @param type One or more event names separated by space.<br/>
    *      Important: the string must be equal to the one used for {@link on} or {@link one}. This also applies if a string containing multiple types separated by space was used.
-   * @param {function} [func] The exact same event handler that was used for registration using {@link on} or {@link one}.
+   * @param func The exact same event handler that was used for registration using {@link on} or {@link one}.
    *      If no handler is specified, all handlers are de-registered for the given type.
    */
-  off(type, func) {
+  off(type: string, func?: EventHandler<Event>) {
     if (!type && !func) {
       return;
     }
@@ -92,24 +96,24 @@ export default class EventSupport {
   }
 
   /**
-   * Adds an event handler using {@link #one()} and returns a promise.
+   * Adds an event handler using {@link one} and returns a promise.
    * The promise is resolved as soon as the event is triggered.
    */
-  when(type) {
+  when(type: string):JQuery.Promise<Event> {
     let deferred = $.Deferred();
     this.one(type, deferred.resolve.bind(deferred));
     return deferred.promise();
   }
 
-  addListener(listener) {
+  addListener(listener: EventListener) {
     this._eventListeners.push(listener);
   }
 
-  removeListener(listener) {
+  removeListener(listener: EventListener) {
     arrays.remove(this._eventListeners, listener);
   }
 
-  count(type, func) {
+  count(type: string, func: EventHandler<Event>): number {
     let count = 0;
     this._eventListeners.forEach(listener => {
       if (type && type !== listener.type) {
@@ -123,8 +127,8 @@ export default class EventSupport {
     return count;
   }
 
-  trigger(type, event) {
-    event = event || {};
+  trigger(type: string, event: Event) {
+    event = event || {} as Event;
     event.type = type;
 
     // Create copy because firing a trigger might modify the list of listeners
@@ -138,7 +142,7 @@ export default class EventSupport {
     }
   }
 
-  _typeMatches(event, listenerType) {
+  protected _typeMatches(event: Event, listenerType: string): boolean {
     let eventType = event.type;
     let types = listenerType.split(' ');
     // support for multi type definition 'type1 type2 [...]'
@@ -153,7 +157,7 @@ export default class EventSupport {
     return false;
   }
 
-  _subTypeMatches(event, listenerType) {
+  protected _subTypeMatches(event: Event, listenerType: string): boolean {
     if (listenerType.indexOf(':') < 0) {
       return false;
     }
@@ -169,10 +173,10 @@ export default class EventSupport {
 
   /**
    *
-   * @param {string} type the type which could contain a sub type
-   * @param {function} predicate the predicate which will be tested when an event with the given type is triggered. The function has two parameters: event and subType
+   * @param type the type which could contain a sub type
+   * @param predicate the predicate which will be tested when an event with the given type is triggered.
    */
-  registerSubTypePredicate(type, predicate) {
+  registerSubTypePredicate(type: string, predicate: EventSubTypePredicate) {
     scout.assertParameter('type', type);
     scout.assertParameter('predicate', predicate);
     this._subTypePredicates[type] = predicate;

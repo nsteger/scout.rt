@@ -8,25 +8,24 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {arrays, EventEmitter, objects, scout} from '../index';
+import {arrays, Event, EventDelegatorOptions, EventEmitter, EventListener, objects, PropertyChangeEvent, PropertyEventEmitter, scout} from '../index';
 
 /**
  * Delegates events between two {@link EventEmitter}s.
  */
 export default class EventDelegator {
+  source: EventEmitter;
+  target: EventEmitter;
+  callSetter: boolean;
+  delegateProperties: string[];
+  excludeProperties: string[];
+  delegateEvents: string[];
+  delegateAllProperties: boolean;
+  delegateAllEvents: boolean;
+  protected _mirrorListener: EventListener;
+  protected _destroyHandler: any; // FIXME TS remove because never assigned?
 
-  /**
-   * @param {EventEmitter} source
-   * @param {EventEmitter} target
-   * @param {object} [options]
-   * @param {boolean} [options.callSetter] True, to call the setter on the target on a property change event.
-   * @param {string[]} [options.delegateProperties] An array of all properties to be delegated from the source to the target when changed on the source. Default is [];
-   * @param {string[]} [options.excludeProperties] An array of all properties to be excluded from delegating to the target in all cases. Default is [].
-   * @param {string[]} [options.delegateEvents] An array of all events to be delegated from the source to the target when triggered on the source. Default is [].
-   * @param {string[]} [options.delegateAllProperties] True, to delegate all property changes from the source to the target. Default is false.
-   * @param {string[]} [options.delegateAllEvents] True, to delegate all events from the source to the target. Default is false.
-   */
-  constructor(source, target, options) {
+  constructor(source: EventEmitter, target: EventEmitter, options?: EventDelegatorOptions) {
     options = options || {};
     this.source = source;
     this.target = target;
@@ -46,7 +45,7 @@ export default class EventDelegator {
     this._uninstallSourceListener();
   }
 
-  _installSourceListener() {
+  protected _installSourceListener() {
     if (this._mirrorListener) {
       throw new Error('source listeners already installed.');
     }
@@ -59,7 +58,7 @@ export default class EventDelegator {
     this.target.on('destroy', this._destroyHandler);
   }
 
-  _uninstallSourceListener() {
+  protected _uninstallSourceListener() {
     if (this._mirrorListener) {
       this.source.events.removeListener(this._mirrorListener);
       this._mirrorListener = null;
@@ -71,15 +70,15 @@ export default class EventDelegator {
     }
   }
 
-  _onSourceEvent(event) {
+  protected _onSourceEvent(event: Event) {
     if (event.type === 'propertyChange') {
-      this._onSourcePropertyChange(event);
+      this._onSourcePropertyChange(event as PropertyChangeEvent<PropertyEventEmitter, any>);
     } else if (this.delegateAllEvents || this.delegateEvents.indexOf(event.type) > -1) {
       this.target.trigger(event.type, event);
     }
   }
 
-  _onSourcePropertyChange(event) {
+  protected _onSourcePropertyChange(event: PropertyChangeEvent<PropertyEventEmitter, any>) {
     if (this.excludeProperties.indexOf(event.propertyName) > -1) {
       return;
     }
@@ -88,23 +87,23 @@ export default class EventDelegator {
         return;
       }
       if (this.callSetter) {
-        (/** @type {PropertyEventEmitter} */ this.target).callSetter(event.propertyName, event.newValue);
+        (this.target as PropertyEventEmitter).callSetter(event.propertyName, event.newValue);
       } else {
         this.target.trigger(event.type, event);
       }
     }
   }
 
-  static equalsProperty(propName, obj, value) {
+  static equalsProperty(propName: string, obj: object, value): boolean {
     let propValue = obj[propName];
     // Compare arrays using arrays.equals()
     if (Array.isArray(value) && Array.isArray(propValue)) {
-      return arrays.equals(value, propValue);
+      return arrays.equals(value as [], propValue as []);
     }
     return objects.equals(propValue, value);
   }
 
-  static create(source, target, options) {
+  static create(source: EventEmitter, target: EventEmitter, options: EventDelegatorOptions): EventDelegator {
     if ((options.delegateProperties && options.delegateProperties.length > 0) ||
       (options.delegateEvents && options.delegateEvents.length > 0) ||
       options.delegateAllProperties ||

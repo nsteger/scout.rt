@@ -11,5 +11,5 @@ export default interface WidgetSupportOptions {
    * It may be a function to resolve the container later.
    * If this property is not set the $container of the widget is used by default.
    */
-  $container?: JQuery | Function;
+  $container?: JQuery | (() => JQuery);
 }

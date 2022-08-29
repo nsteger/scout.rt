@@ -8,28 +8,33 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {arrays, FilterSupportOptions, FormField, HAlign, keys, KeyStroke, objects, scout, StringField, strings, styles, ValueField, WidgetSupport} from '../index';
+import {arrays, EventHandler, Filter, Filterable, FilterResult, FilterSupportOptions, FormField, HAlign, keys, KeyStroke, objects, scout, SetFiltersResult, StringField, strings, styles, UpdateFilteredElementsOptions, ValueField, Widget, WidgetSupport} from '../index';
 import FocusFilterFieldKeyStroke from '../keystroke/FocusFilterFieldKeyStroke';
+import {FilterElement, TextFilter} from './Filter';
 
-export default class FilterSupport extends WidgetSupport {
-  protected _cancelFilterFieldKeyStroke: any;
-  protected _createTextFilter: any;
-  protected _exitFilterFieldKeyStroke: any;
-  protected _filterElements: any;
-  protected _filterField: any;
-  protected _filterFieldDisplayTextChangedHandler: any;
-  protected _focusFilterFieldKeyStroke: any;
-  protected _focusInHandler: any;
-  protected _focusOutHandler: any;
-  protected _getElementText: any;
-  protected _getElementsForFiltering: any;
-  protected _textFilter: any;
-  protected _updateTextFilterText: any;
+type FilterFunction<TElem extends FilterElement> = ((elem) => boolean);
+type FilterOrFunction<TElem extends FilterElement> = Filter<TElem> | FilterFunction<TElem>;
+
+export default class FilterSupport<TElem extends FilterElement> extends WidgetSupport {
+  widget: Widget & Filterable<TElem>;
+  protected _cancelFilterFieldKeyStroke: KeyStroke;
+  protected _createTextFilter: () => TextFilter<TElem>;
+  protected _exitFilterFieldKeyStroke: KeyStroke;
+  protected _filterElements: () => FilterResult<TElem>;
+  protected _filterField: StringField;
+  protected _filterFieldDisplayTextChangedHandler: EventHandler;
+  protected _focusFilterFieldKeyStroke: KeyStroke;
+  protected _focusInHandler: JQuery.EventHandler<HTMLElement>;
+  protected _focusOutHandler: JQuery.EventHandler<HTMLElement>;
+  protected _getElementText: (elem: TElem) => string;
+  protected _getElementsForFiltering: () => TElem[];
+  protected _textFilter: TextFilter<TElem>;
+  protected _updateTextFilterText: (filter: TextFilter<TElem>, text: string) => boolean;
 
   /**
    * @param options a mandatory options object
    */
-  constructor(options: FilterSupportOptions) {
+  constructor(options: FilterSupportOptions<TElem>) {
     super(options);
 
     if (options.filterElements) {
@@ -63,7 +68,7 @@ export default class FilterSupport extends WidgetSupport {
     this._textFilter = null;
   }
 
-  protected _createDefaultTextFilter() {
+  protected _createDefaultTextFilter(): TextFilter<TElem> {
     return {
       acceptedText: null,
       accept: element => {
@@ -79,7 +84,7 @@ export default class FilterSupport extends WidgetSupport {
     };
   }
 
-  protected _updateDefaultTextFilterText(filter, text) {
+  protected _updateDefaultTextFilterText(filter: TextFilter<TElem>, text: string): boolean {
     if (objects.equals(filter.acceptedText, text)) {
       return false;
     }
@@ -163,7 +168,7 @@ export default class FilterSupport extends WidgetSupport {
     this._filterField.$container.css('--filter-field-transparent-80-background-color', transparent80Color);
   }
 
-  protected _onFilterFieldDisplayTextChanged(event) {
+  protected _onFilterFieldDisplayTextChanged(event) { // FIXME TS DisplayTextChangedEvent
     if (this._filterField && this._filterField.rendered) {
       this._filterField.$container.toggleClass('empty', !event.newValue);
     }
@@ -173,15 +178,15 @@ export default class FilterSupport extends WidgetSupport {
     this.filter();
   }
 
-  protected _onFocusIn(event) {
+  protected _onFocusIn(event: JQuery.FocusInEvent) {
     this._updateFocusInsideWidget(event.target);
   }
 
-  protected _onFocusOut(event) {
-    this._updateFocusInsideWidget(event.relatedTarget);
+  protected _onFocusOut(event: JQuery.FocusOutEvent) {
+    this._updateFocusInsideWidget(event.relatedTarget as Element);
   }
 
-  protected _updateFocusInsideWidget(target) {
+  protected _updateFocusInsideWidget(target: Element): boolean {
     let focusInsideWidget = this.widget.$container.isOrHas(target);
     if (this._filterField && this._filterField.rendered) {
       this._filterField.$container.toggleClass('focus-inside-widget', focusInsideWidget);
@@ -227,11 +232,11 @@ export default class FilterSupport extends WidgetSupport {
   }
 
   /**
-   * @param {Filter|function|(Filter|function)[]} filter The filters to add.
-   * @param {boolean} applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
+   * @param filter The filters to add.
+   * @param applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
    * @return {Filter[]} Returns the added filters.
    */
-  addFilter(filter: Filter | Function | (Filter | Function)[], applyFilter = true): Filter[] {
+  addFilter(filter: FilterOrFunction<TElem> | FilterOrFunction<TElem>[], applyFilter = true): Filter<TElem>[] {
     let filtersToAdd = arrays.ensure(filter);
     let filters = this._getFilters().slice(),
       oldFilters = filters.slice();
@@ -253,11 +258,11 @@ export default class FilterSupport extends WidgetSupport {
   }
 
   /**
-   * @param {Filter|function|(Filter|function)[]} filter The filters to remove.
-   * @param {boolean} applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
-   * @return {Filter[]} Returns the removed filters.
+   * @param filter The filters to remove.
+   * @param applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
+   * @returns Returns the removed filters.
    */
-  removeFilter(filter: Filter | Function | (Filter | Function)[], applyFilter = true): Filter[] {
+  removeFilter(filter: FilterOrFunction<TElem> | FilterOrFunction<TElem>[], applyFilter = true): Filter<TElem>[] {
     let filtersToRemove = arrays.ensure(filter);
     let filters = this._getFilters().slice(),
       oldFilters = filters.slice();
@@ -280,11 +285,10 @@ export default class FilterSupport extends WidgetSupport {
   }
 
   /**
-   * @param {Filter|function|(Filter|function)[]} filter The new filters.
-   * @param {boolean} applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
-   * @return {SetFiltersResult}
+   * @param filter The new filters.
+   * @param applyFilter Whether to apply the filters after modifying the filter list or not. Default is true.
    */
-  setFilters(filters, applyFilter = true): SetFiltersResult {
+  setFilters(filters: FilterOrFunction<TElem> | FilterOrFunction<TElem>[], applyFilter = true): SetFiltersResult<TElem> {
     filters = arrays.ensure(filters);
     this._addSyntheticFilters(filters);
 
@@ -308,7 +312,7 @@ export default class FilterSupport extends WidgetSupport {
     };
   }
 
-  protected _setFilters(filters, applyFilter = true) {
+  protected _setFilters(filters: FilterOrFunction<TElem>[], applyFilter = true) {
     this.widget.setProperty('filters', filters.map(filter => {
       if (objects.isFunction(filter)) {
         return this._createFilterByFunction(filter);
@@ -320,32 +324,32 @@ export default class FilterSupport extends WidgetSupport {
     }
   }
 
-  protected _addSyntheticFilters(filters) {
+  protected _addSyntheticFilters(filters: FilterOrFunction<TElem>[]) {
     this._getFilters().filter(filter => filter.synthetic)
       .forEach(filter => this._addSyntheticFilter(filters, filter));
 
     this._addSyntheticFilter(filters, this._textFilter);
   }
 
-  protected _addSyntheticFilter(filters, syntheticFilter) {
+  protected _addSyntheticFilter(filters: FilterOrFunction<TElem>[], syntheticFilter: Filter<TElem>) {
     if (!syntheticFilter || this._hasFilter(filters, syntheticFilter)) {
       return;
     }
     filters.push(syntheticFilter);
   }
 
-  protected _getFilters() {
+  protected _getFilters(): Filter<TElem>[] {
     return this.widget.filters;
   }
 
-  protected _findFilter(filters, filter) {
+  protected _findFilter(filters: Filter<TElem>[], filter: Filter<TElem>) {
     if (objects.isFunction(filter)) {
       return this._getFilterCreatedByFunction(filters, filter);
     }
     return arrays.find(filters, f => objects.equals(f, filter));
   }
 
-  protected _getFilterCreatedByFunction(filters, filterFunc) {
+  protected _getFilterCreatedByFunction(filters: Filter<TElem>[], filterFunc) {
     return arrays.find(filters, filter => filter.createdByFunction && filter.accept === filterFunc);
   }
 
@@ -353,21 +357,21 @@ export default class FilterSupport extends WidgetSupport {
     return !!this._findFilter(filters, filter);
   }
 
-  protected _createFilterByFunction(filterFunc) {
+  protected _createFilterByFunction(filterFunc): Filter<TElem> {
     return {
       createdByFunction: true,
       accept: filterFunc
     };
   }
 
-  filter() {
-    let result = this._filterElements(),
-      changed = result && (arrays.ensure(result.newlyHidden).length || arrays.ensure(result.newlyShown).length);
+  filter(): FilterResult<TElem> {
+    let result = this._filterElements();
+    let changed = result && (arrays.ensure(result.newlyHidden).length || arrays.ensure(result.newlyShown).length);
 
     if (changed) {
       this.widget.filteredElementsDirty = true;
 
-      let opts = {};
+      let opts = {} as UpdateFilteredElementsOptions;
       if (this._filterField) {
         opts.textFilterText = this._filterField.displayText;
       }
@@ -377,11 +381,11 @@ export default class FilterSupport extends WidgetSupport {
     return result;
   }
 
-  protected _filter() {
+  protected _filter(): FilterResult<TElem> {
     return this.applyFilters(this._getElementsForFiltering(), true);
   }
 
-  applyFilters(elements, fullReset) {
+  applyFilters(elements: TElem[], fullReset?: boolean): FilterResult<TElem> {
     if (this._getFilters().length === 0 && !scout.nvl(fullReset, false)) {
       return;
     }
@@ -403,7 +407,7 @@ export default class FilterSupport extends WidgetSupport {
     };
   }
 
-  applyFiltersForElement(element) {
+  applyFiltersForElement(element: TElem): boolean {
     if (this.elementAcceptedByFilters(element)) {
       if (!element.filterAccepted) {
         element.setFilterAccepted(true);
@@ -416,7 +420,7 @@ export default class FilterSupport extends WidgetSupport {
     return false;
   }
 
-  elementAcceptedByFilters(element) {
+  elementAcceptedByFilters(element: TElem): boolean {
     return this._getFilters().every(filter => filter.accept(element));
   }
 }

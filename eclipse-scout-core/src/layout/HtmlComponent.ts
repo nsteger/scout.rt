@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {Dimension, graphics, Insets, LayoutData, NullLayout, scout} from '../index';
+import {Dimension, graphics, Insets, LayoutData, NullLayout, scout, Session} from '../index';
 import $ from 'jquery';
 
 /**
@@ -29,7 +29,7 @@ export default class HtmlComponent {
   suppressValidate: boolean;
   valid: boolean;
   validateRoot: boolean;
-  constructor($comp, session) {
+  constructor($comp: JQuery, session: Session) {
     if (!session) {
       throw new Error('session must be defined for ' + this.debug());
     }
@@ -93,7 +93,7 @@ export default class HtmlComponent {
   /**
    * @returns {boolean} true if the given htmlComponent is an ancestor, false if not
    */
-  isDescendantOf(htmlComp): boolean {
+  isDescendantOf(htmlComp: HtmlComponent): boolean {
     let $parent = this.$comp.parent();
     while ($parent.length > 0) {
       if (HtmlComponent.optGet($parent) === htmlComp) {
@@ -225,7 +225,7 @@ export default class HtmlComponent {
     return true;
   }
 
-  protected _validateLayoutAfterAnimation($animatedElement) {
+  protected _validateLayoutAfterAnimation($animatedElement: JQuery) {
     $animatedElement.oneAnimationEnd(this.validateLayout.bind(this));
   }
 
@@ -543,7 +543,7 @@ export default class HtmlComponent {
    *
    * @memberOf HtmlComponent
    */
-  static install($comp, session) {
+  static install($comp: JQuery, session: Session) {
     if (!$comp) {
       throw new Error('Missing argument "$comp"');
     }
@@ -564,7 +564,7 @@ export default class HtmlComponent {
    *
    * @memberOf HtmlComponent
    */
-  static get($comp) {
+  static get($comp: JQuery) {
     let htmlComp = this.optGet($comp);
     if (!htmlComp) {
       let details = '';
@@ -581,7 +581,7 @@ export default class HtmlComponent {
   /**
    * @memberOf HtmlComponent
    */
-  static optGet($comp) {
+  static optGet($comp: JQuery) {
     return $comp && $comp.data('htmlComponent');
   }
 }

@@ -8,56 +8,38 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {Action, arrays, KeyStroke, keyStrokeModifier, objects, scout} from '../index';
+import {Action, arrays, EventHandler, KeyStroke, keyStrokeModifier, scout} from '../index';
 import $ from 'jquery';
+import KeyStrokeContextOptions from './KeyStrokeContextOptions';
 
-export default class KeyStrokeContext {
+export default class KeyStrokeContext implements KeyStrokeContextOptions {
   invokeAcceptInputOnActiveValueField: boolean;
-  keyStrokes: any[];
-  stopPropagationInterceptors: any[];
+  keyStrokes: KeyStroke[];
+  stopPropagationInterceptors: EventHandler[];
   $bindTarget: JQuery | (() => JQuery);
   $scopeTarget: JQuery | (() => JQuery);
-  protected _stopPropagationKeys: any;
+  /**
+   * Arrays with combinations of keys to prevent from bubbling up in the DOM tree.
+   */
+  protected _stopPropagationKeys: { [bitMask: number]: number[] };
 
-  constructor(options) {
-    /*
-     * Holds the target where to bind this context as keydown listener.
-     * This can either be a static value or a function to resolve the target.
-     */
+  constructor(options: KeyStrokeContextOptions) {
     this.$bindTarget = null;
-    /*
-     * Holds the scope of this context and is used to determine the context's accessibility, meaning not covert by a glasspane.
-     * This can either be a static value or a function to resolve the target.
-     */
     this.$scopeTarget = null;
-    /*
-     * Holds the keystrokes registered within this context.
-     */
     this.keyStrokes = [];
-    /*
-     * Array of interceptors to participate in setting 'stop propagation' flags.
-     */
     this.stopPropagationInterceptors = [];
-
-    /*
-     * Arrays with combinations of keys to prevent from bubbling up in the DOM tree.
-     */
     this._stopPropagationKeys = {};
-
-    /*
-     * Indicates whether to invoke 'acceptInput' on a currently focused value field prior handling the keystroke.
-     */
     this.invokeAcceptInputOnActiveValueField = false;
 
-    options = options || {};
+    options = options || {} as KeyStrokeContextOptions;
     $.extend(this, options);
   }
 
   /**
    * Registers the given keys as 'stopPropagation' keys, meaning that any keystroke event with that key and matching the modifier bit mask is prevented from bubbling the DOM tree up.
    *
-   * @param {number} modifierBitMask bitwise OR'ing together modifier constants to match a keystroke event. (KeyStrokeModifier.js)
-   * @param {[number]} keys the keys to match a keystroke event.
+   * @param modifierBitMask bitwise OR'ing together modifier constants to match a keystroke event. (KeyStrokeModifier.js)
+   * @param keys the keys to match a keystroke event.
    */
   registerStopPropagationKeys(modifierBitMask: number, keys: [number]) {
     this._stopPropagationKeys[modifierBitMask] = this._stopPropagationKeys[modifierBitMask] || [];
@@ -67,8 +49,8 @@ export default class KeyStrokeContext {
   /**
    * Unregisters the given keys as 'stopPropagation' keys.
    *
-   * @param {number} modifierBitMask bitwise OR'ing together modifier constants to match a keystroke event. (KeyStrokeModifier.js)
-   * @param {[number]} keys the keys to match a keystroke event.
+   * @param modifierBitMask bitwise OR'ing together modifier constants to match a keystroke event. (KeyStrokeModifier.js)
+   * @param keys the keys to match a keystroke event.
    */
   unregisterStopPropagationKeys(modifierBitMask: number, keys: [number]) {
     if (!this._stopPropagationKeys[modifierBitMask]) {
@@ -80,14 +62,14 @@ export default class KeyStrokeContext {
   /**
    * Use this method to register an interceptor to set propagation flags on context level.
    */
-  registerStopPropagationInterceptor(interceptor) {
+  registerStopPropagationInterceptor(interceptor: EventHandler) {
     this.stopPropagationInterceptors.push(interceptor);
   }
 
   /**
    * Returns true if this event is handled by this context, and if so sets the propagation flags accordingly.
    */
-  accept(event) {
+  accept(event: KeyboardEvent): boolean {
     // Check whether this event is accepted.
     if (!this._accept(event)) {
       return false;
@@ -116,48 +98,55 @@ export default class KeyStrokeContext {
     }, this);
   }
 
-  protected _accept(event) {
+  protected _accept(event): boolean {
     return true;
   }
 
-  registerKeyStroke(keyStroke) {
+  registerKeyStroke(keyStroke: KeyStroke) {
     this.registerKeyStrokes(keyStroke);
   }
 
   /**
    * Registers the given keystroke(s) if not installed yet.
    */
-  registerKeyStrokes(keyStrokes) {
+  registerKeyStrokes(keyStrokes: KeyStroke | KeyStroke[]) {
     arrays.ensure(keyStrokes)
       .map(this._resolveKeyStroke, this)
-      .filter(function(ks) {
+      .filter(ks => {
         return this.keyStrokes.indexOf(ks) === -1; // must not be registered yet
-      }, this)
-      .forEach(function(ks) {
-        this.keyStrokes.push(ks);
-
+      })
+      .forEach(keystroke => {
+        this.keyStrokes.push(keystroke);
+        let ks: KeyStroke & { destroyListener: EventHandler };
+        // FIXME TS what is our pattern for such stuff?
+        // @ts-ignore
+        ks = keystroke;
         // Registers a destroy listener, so that the keystroke is uninstalled once its field is destroyed.
         if (ks.field && !ks.destroyListener) {
-          ks.destroyListener = function(event) {
+          ks.destroyListener = event => {
             this.unregisterKeyStroke(ks);
             ks.destroyListener = null;
-          }.bind(this);
+          };
           ks.field.one('destroy', ks.destroyListener);
         }
-      }, this);
+      });
   }
 
   /**
    * Uninstalls the given keystroke. Has no effect if not installed.
    */
-  unregisterKeyStroke(keyStroke) {
+  unregisterKeyStroke(keyStroke: KeyStroke) {
     this.unregisterKeyStrokes(keyStroke);
   }
 
-  unregisterKeyStrokes(keyStrokes) {
+  unregisterKeyStrokes(keyStrokes: KeyStroke | KeyStroke[]) {
     arrays.ensure(keyStrokes)
       .map(this._resolveKeyStroke, this)
-      .forEach(function(ks) {
+      .forEach(function(keystroke) {
+        let ks: KeyStroke & { destroyListener: EventHandler };
+        // FIXME TS what is our pattern for such stuff?
+        // @ts-ignore
+        ks = keystroke;
         if (arrays.remove(this.keyStrokes, ks) && ks.field && ks.destroyListener) {
           ks.field.off('destroy', ks.destroyListener);
           ks.destroyListener = null;
@@ -165,10 +154,11 @@ export default class KeyStrokeContext {
       }, this);
   }
 
-  protected _resolveKeyStroke(keyStroke) {
+  protected _resolveKeyStroke(keyStroke: KeyStroke | Action) {
     if (keyStroke instanceof KeyStroke) {
       return keyStroke;
-    } else if (keyStroke instanceof Action) {
+    }
+    if (keyStroke instanceof Action) {
       return keyStroke.actionKeyStroke;
     }
     throw new Error('unsupported keystroke: ' + keyStroke);
@@ -177,18 +167,18 @@ export default class KeyStrokeContext {
   /**
    * Returns the $target where to bind this context as keydown listener.
    */
-  $getBindTarget() {
+  $getBindTarget(): JQuery {
     return (typeof this.$bindTarget === 'function' ? this.$bindTarget() : this.$bindTarget);
   }
 
   /**
    * Returns the scope of this context and is used to determine the context's accessibility, meaning not covert by a glasspane.
    */
-  $getScopeTarget() {
+  $getScopeTarget(): JQuery {
     return (typeof this.$scopeTarget === 'function' ? this.$scopeTarget() : this.$scopeTarget);
   }
 
-  clone() {
-    return new KeyStrokeContext(objects.copyOwnProperties(this, {}));
+  clone(): KeyStrokeContext {
+    return new KeyStrokeContext($.extend({}, this));
   }
 }

@@ -18,7 +18,7 @@ export default class NullWidget extends Widget {
     this._addWidgetProperties(['childWidget']);
   }
 
-  setChildWidget(childWidget) {
+  setChildWidget(childWidget: Widget) {
     this.setProperty('childWidget', childWidget);
   }
 }

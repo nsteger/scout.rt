@@ -28,7 +28,7 @@ export default class PropertyEventEmitter extends EventEmitter {
    * @param newValue the new value the property should get
    * @return true if the property has been changed, false if not.
    */
-  setProperty(propertyName, value) {
+  setProperty(propertyName: string, value): boolean {
     if (objects.equals(this[propertyName], value)) {
       return false;
     }
@@ -36,7 +36,7 @@ export default class PropertyEventEmitter extends EventEmitter {
     return true;
   }
 
-  _callSetProperty(propertyName, value) {
+  protected _callSetProperty(propertyName: string, value) {
     let setFuncName = '_set' + strings.toUpperCaseFirstLetter(propertyName);
     if (this[setFuncName]) {
       this[setFuncName](value);
@@ -50,11 +50,11 @@ export default class PropertyEventEmitter extends EventEmitter {
    * <p>
    * It is possible to prevent the setting of the property value by using {@link Event.preventDefault}.
    *
-   * @param {string} propertyName the name of the property
-   * @param {any} newValue the new value the property should get
-   * @return {boolean} true if the property has been changed, false if not.
+   * @param propertyName the name of the property
+   * @param newValue the new value the property should get
+   * @return true if the property has been changed, false if not.
    */
-  _setProperty(propertyName, newValue) {
+  protected _setProperty(propertyName: string, newValue): boolean {
     scout.assertParameter('propertyName', propertyName);
     let oldValue = this[propertyName];
     if (objects.equals(oldValue, newValue)) {
@@ -73,7 +73,7 @@ export default class PropertyEventEmitter extends EventEmitter {
   /**
    * Triggers a property change for a single property.
    */
-  triggerPropertyChange(propertyName, oldValue, newValue) {
+  triggerPropertyChange(propertyName: string, oldValue, newValue): Event {
     scout.assertParameter('propertyName', propertyName);
     let event = new Event({
       propertyName: propertyName,
@@ -88,7 +88,7 @@ export default class PropertyEventEmitter extends EventEmitter {
    * Calls the setter of the given property name if it exists. A setter has to be named setXy, where Xy is the property name.
    * If there is no setter for the property name, {@link setProperty} is called.
    */
-  callSetter(propertyName, value) {
+  callSetter(propertyName: string, value) {
     let setterFuncName = 'set' + strings.toUpperCaseFirstLetter(propertyName);
     if (this[setterFuncName]) {
       this[setterFuncName](value);

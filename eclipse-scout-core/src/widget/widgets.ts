@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {AnyWidget, arrays} from '../index';
+import {AnyWidget, arrays, Widget} from '../index';
 import $ from 'jquery';
 
 let uniqueIdSeqNo = 0;
@@ -37,7 +37,7 @@ export function get($elem: HTMLElement | JQuery): AnyWidget {
  * if scout widgets are embedded into a foreign web site which already uses numbers in its id attributes.
  * So it is not really unique but should be good enough when you know what you are doing.
  */
-export function createUniqueId(prefix) {
+export function createUniqueId(prefix: string): string {
   prefix = prefix || 'sc';
   return prefix + uniqueIdSeqNo++;
 }
@@ -45,7 +45,7 @@ export function createUniqueId(prefix) {
 /**
  * Iterates through the given widgets and toggles the 'first' and 'last' classes on the corresponding widgets if the widgets are visible and rendered.
  */
-export function updateFirstLastMarker(widgets) {
+export function updateFirstLastMarker(widgets: Widget[]) {
   widgets.filter((widget, i, widgets) => {
     return widget.rendered && widget.isVisible();
   }).forEach((widget, i, widgets) => {
@@ -55,10 +55,10 @@ export function updateFirstLastMarker(widgets) {
 }
 
 /**
- * @param {Widget[]} widgets the widgets to check.
- * @param {Widget} [container] if specified, the function returns null if the container is not visible or not rendered. This allows for an early return without the need to check every given widget.
- * @param {boolean} [checkTabbable=true] if true, the resulting widget has to be tabbable, not only focusable.
- * @returns {Widget} the first widget of the given list which is focusable (and tabbable, unless checkTabbable is set to false).
+ * @param widgets the widgets to check.
+ * @param container if specified, the function returns null if the container is not visible or not rendered. This allows for an early return without the need to check every given widget.
+ * @param checkTabbable if true, the resulting widget has to be tabbable, not only focusable. Default is true.
+ * @returns the first widget of the given list which is focusable (and tabbable, unless checkTabbable is set to false).
  */
 export function findFirstFocusableWidget(widgets: Widget[], container?: Widget, checkTabbable?: boolean): Widget {
   if (container && (!container.rendered || !container.visible)) {
@@ -70,12 +70,8 @@ export function findFirstFocusableWidget(widgets: Widget[], container?: Widget, 
 /**
  * Sets a property using the given setter after reading the value using the getter and preserving it on the preserver using the preserverName.
  * The preserved property can be reset using {@link resetProperty}.
- * @param {function} setter
- * @param {function} getter
- * @param {object} preserver
- * @param {string} preserverName
  */
-export function preserveAndSetProperty(setter: Function, getter: Function, preserver: object, preserverName: string) {
+export function preserveAndSetProperty(setter: () => void, getter: () => any, preserver: object, preserverName: string) {
   if (preserver[preserverName] === null) {
     preserver[preserverName] = getter();
   }
@@ -84,11 +80,11 @@ export function preserveAndSetProperty(setter: Function, getter: Function, prese
 
 /**
  * Resets a property that has been preserved on the preserver by {@link preserveAndSetProperty} using the given setter. Sets the preserved property to null afterwards.
- * @param {function} setter
- * @param {object} preserver
- * @param {string} preserverName
+ * @param setter
+ * @param preserver
+ * @param preserverName
  */
-export function resetProperty(setter: Function, preserver: object, preserverName: string) {
+export function resetProperty(setter: (value) => void, preserver: object, preserverName: string) {
   if (preserver[preserverName] != null) {
     setter(preserver[preserverName]);
     preserver[preserverName] = null;

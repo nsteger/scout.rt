@@ -8,16 +8,12 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {objects, strings} from '../index';
+import {objects, Predicate, strings} from '../index';
 
 /**
- * Ensures the given parameter is an array
- *
- * @template T
- * @param {T[]|T|null} array
- * @return T[]
+ * Ensures the given parameter is an array.
  */
-export function ensure(array: T[] | T | null) {
+export function ensure<T>(array: T[] | T): T[] {
   if (array === undefined || array === null) {
     return [];
   }
@@ -30,7 +26,7 @@ export function ensure(array: T[] | T | null) {
 /**
  * Creates an array with the given length and initializes each value with the given initValue.
  */
-export function init(length, initValue) {
+export function init<T>(length: number, initValue: T): T[] {
   let array = [];
   for (let i = 0; i < length; i++) {
     array[i] = initValue;
@@ -40,12 +36,12 @@ export function init(length, initValue) {
 
 /**
  * Removes the first occurrence of the specified element from the array,
- * if it is present (optional operation).  If the array does not contain
+ * if it is present (optional operation). If the array does not contain
  * the element, it is unchanged.
  *
- * @return {boolean} true if the array contained the specified element
+ * @return true if the array contained the specified element
  */
-export function remove(arr, element): boolean {
+export function remove<T>(arr: T[], element: T): boolean {
   if (arr) {
     let index = arr.indexOf(element);
     if (index !== -1) {
@@ -59,9 +55,9 @@ export function remove(arr, element): boolean {
 /**
  * Removes every given element from the array
  *
- * @return {boolean} true if the array contained at least one of the specified elements
+ * @return true if the array contained at least one of the specified elements
  */
-export function removeAll(arr, elements): boolean {
+export function removeAll<T>(arr: T[], elements: T[]): boolean {
   let modified = false;
   if (!elements || elements.length === 0) {
     return false;
@@ -76,9 +72,9 @@ export function removeAll(arr, elements): boolean {
 }
 
 /**
- * @return {number} the index of the replaced element
+ * @return the index of the replaced element
  */
-export function replace(arr, element, replacement): number {
+export function replace<T>(arr: T[], element: T, replacement: T): number {
   let index = arr.indexOf(element);
   if (index !== -1) {
     arr[index] = replacement;
@@ -89,9 +85,9 @@ export function replace(arr, element, replacement): number {
 /**
  * Inserts the given element at the specified index.
  * <p>
- * This function uses insertAll() which relies on Array.prototype.splice(). Check its js-doc for details.
+ * This function uses {@link insertAll} which relies on Array.prototype.splice(). Check its js-doc for details.
  */
-export function insert(arr, element, index) {
+export function insert<T>(arr: T[], element: T, index: number) {
   insertAll(arr, [element], index);
 }
 
@@ -104,8 +100,9 @@ export function insert(arr, element, index) {
  *
  * The caller must ensure the size of the array.
  */
-export function insertAll(arr, elements, index) {
+export function insertAll<T>(arr: T[], elements: T | T[], index: number) {
   elements = ensure(elements);
+  // @ts-ignore // FIXME TS dom splice api wrong?
   arr.splice(...[index, 0].concat(elements));
 }
 
@@ -114,7 +111,7 @@ export function insertAll(arr, elements, index) {
  *
  * All arguments are mandatory.
  */
-export function insertSorted(arr, element, compareFunc) {
+export function insertSorted<T>(arr: T[], element: T, compareFunc: (a: T, b: T) => number) {
   // https://en.wikipedia.org/wiki/Binary_search_algorithm
   let left = 0;
   let right = arr.length - 1;
@@ -147,13 +144,9 @@ export function insertSorted(arr, element, compareFunc) {
  * Inserts to given element into the array directly BEFORE the first array element that matches the given predicate.
  * If no such element can be found, the new element is inserted at the BEGIN of the array.
  *
- * @template T
- * @param {T[]} arr
- * @param {T} elementToInsert
- * @param {function(T): boolean} predicate
- * @param {*} [thisArg] optional "this" binding for predicate function
+ * @param thisArg optional "this" binding for predicate function
  */
-export function insertBefore(arr: T[], elementToInsert: T, predicate: (arg0: T) => boolean, thisArg?: any) {
+export function insertBefore<T>(arr: T[], elementToInsert: T, predicate: Predicate<T>, thisArg?: any) {
   let index = findIndex(arr, predicate, thisArg);
   if (index === -1) {
     arr.unshift(elementToInsert);
@@ -165,14 +158,8 @@ export function insertBefore(arr: T[], elementToInsert: T, predicate: (arg0: T) 
 /**
  * Inserts to given element into the array directly AFTER the first array element that matches the given predicate.
  * If no such element can be found, the new element is inserted at the END of the array.
- *
- * @template T
- * @param {T[]} arr
- * @param {T} elementToInsert
- * @param {function(T): boolean} predicate
- * @param {*} [thisArg] optional "this" binding for predicate function
  */
-export function insertAfter(arr: T[], elementToInsert: T, predicate: (arg0: T) => boolean) {
+export function insertAfter<T>(arr: T[], elementToInsert: T, predicate: Predicate<T>) {
   let index = findIndex(arr, predicate);
   if (index === -1) {
     arr.push(elementToInsert);
@@ -182,19 +169,19 @@ export function insertAfter(arr: T[], elementToInsert: T, predicate: (arg0: T) =
 }
 
 /**
- * This function uses insert() which relies on Array.prototype.splice(). Check its js-doc for details.
+ * This function uses {@link insert} which relies on Array.prototype.splice(). Check its js-doc for details.
  */
-export function move(arr, fromIndex, toIndex) {
+export function move(arr: [], fromIndex: number, toIndex: number) {
   let element = arr.splice(fromIndex, 1)[0];
   insert(arr, element, toIndex);
 }
 
-export function contains(haystack, needle) {
+export function contains<T>(haystack: T[], needle: T): boolean {
   haystack = ensure(haystack);
   return haystack.indexOf(needle) !== -1;
 }
 
-export function containsAny(haystack, needles) {
+export function containsAny<T>(haystack: T[], needles: T[]): boolean {
   haystack = ensure(haystack);
   needles = ensure(needles);
   return needles.some(element => {
@@ -202,7 +189,7 @@ export function containsAny(haystack, needles) {
   });
 }
 
-export function containsAll(haystack, needles) {
+export function containsAll<T>(haystack: T[], needles: T[]) {
   haystack = ensure(haystack);
   needles = ensure(needles);
   return needles.every(element => {
@@ -210,24 +197,14 @@ export function containsAll(haystack, needles) {
   });
 }
 
-/**
- * @template T
- * @param {T[]} arr
- * @return {T}
- */
-export function first(arr: T[]): T {
+export function first<T>(arr: T[]): T {
   if (Array.isArray(arr)) {
     return arr[0];
   }
   return arr;
 }
 
-/**
- * @template T
- * @param {T[]} arr
- * @return {T}
- */
-export function last(arr: T[]): T {
+export function last<T>(arr: T[]): T {
   if (Array.isArray(arr)) {
     return arr[arr.length - 1];
   }
@@ -235,16 +212,16 @@ export function last(arr: T[]): T {
 }
 
 /**
- * @returns {boolean} true if the given argument is an array and has a length > 0, false in any other case.
+ * @returns true if the given argument is an array and has a length > 0, false in any other case.
  */
-export function hasElements(arr): boolean {
+export function hasElements(arr: []): boolean {
   return !empty(arr);
 }
 
 /**
- * @returns {boolean} true if the given argument is not an array or the length of the array is 0, false in any other case.
+ * @returns true if the given argument is not an array or the length of the array is 0, false in any other case.
  */
-export function empty(arr): boolean {
+export function empty<T>(arr: T[]): boolean {
   if (Array.isArray(arr)) {
     return arr.length === 0;
   }
@@ -252,16 +229,16 @@ export function empty(arr): boolean {
 }
 
 /**
- * @returns {number} the size of the array, or 0 if the argument is not an array
+ * @returns the size of the array, or 0 if the argument is not an array
  */
-export function length(arr): number {
+export function length(arr: []): number {
   if (Array.isArray(arr)) {
     return arr.length;
   }
   return 0;
 }
 
-export function pushAll(arr, arr2) {
+export function pushAll<T>(arr: T[], arr2: T[]) {
   arr2 = ensure(arr2);
   arr.push(...arr2);
 }
@@ -270,7 +247,7 @@ export function pushAll(arr, arr2) {
  * Merges the two given arrays and removes duplicate entries in O(n).
  * If the arrays contain objects instead of primitives, it uses their id to check for equality.
  */
-export function union(array1, array2) {
+export function union<T extends number | string | { id: string }>(array1: T[], array2: T[]): T[] {
   let result = [];
   let map = {};
 
@@ -278,7 +255,7 @@ export function union(array1, array2) {
   array2 = ensure(array2);
 
   array1.forEach(entry => {
-    let key = entry;
+    let key = entry as (number | string);
     if (typeof entry === 'object') {
       key = entry.id;
     }
@@ -287,7 +264,7 @@ export function union(array1, array2) {
   });
 
   array2.forEach(entry => {
-    let key = entry;
+    let key = entry as (number | string);
     if (typeof entry === 'object') {
       key = entry.id;
     }
@@ -299,7 +276,7 @@ export function union(array1, array2) {
   return result;
 }
 
-export function equalsIgnoreOrder(arr, arr2) {
+export function equalsIgnoreOrder(arr: [], arr2: []): boolean {
   // noinspection DuplicatedCode
   if (arr === arr2) {
     return true;
@@ -316,7 +293,7 @@ export function equalsIgnoreOrder(arr, arr2) {
   return containsAll(arr, arr2);
 }
 
-export function equals(arr, arr2) {
+export function equals(arr: [], arr2: []): boolean {
   // noinspection DuplicatedCode
   if (arr === arr2) {
     return true;
@@ -339,7 +316,7 @@ export function equals(arr, arr2) {
   return true;
 }
 
-export function greater(arr, arr2) {
+export function greater(arr: [], arr2: []): boolean {
   let arrLength = 0,
     arr2Length = 0;
   if (arr) {
@@ -351,7 +328,7 @@ export function greater(arr, arr2) {
   return arrLength > arr2Length;
 }
 
-export function eachSibling(arr, element, func) {
+export function eachSibling<T>(arr: T[], element: T, func: (elem: T, index: number) => void) {
   if (!arr || !func) {
     return;
   }
@@ -367,13 +344,9 @@ export function eachSibling(arr, element, func) {
  * Alternative implementation of Array.findIndex(callback [, thisArg]), which is supported by most browsers.
  * See Array.findIndex for a detailed description.
  *
- * @template T
- * @param {T[]} arr
- * @param {function(T): boolean} predicate
- * @param {*} [thisArg] optional "this" binding for predicate function
- * @returns {number}
+ * @param optional "this" binding for predicate function
  */
-export function findIndex(arr: T[], predicate: (arg0: T) => boolean, thisArg?: any): number {
+export function findIndex<T>(arr: T[], predicate: (arg0: T) => boolean, thisArg?: any): number {
   if (!arr || !predicate) {
     return -1;
   }
@@ -386,13 +359,10 @@ export function findIndex(arr: T[], predicate: (arg0: T) => boolean, thisArg?: a
 }
 
 /**
- * @template T
- * @param {T[]} arr
- * @param {function(T): boolean} predicate
- * @param {*} [thisArg]
- * @returns {T|null}
+ *
+ * @param optional "this" binding for predicate function
  */
-export function find(arr: T[], predicate: (arg0: T) => boolean, thisArg?: any): T | null {
+export function find<T>(arr: T[], predicate: Predicate<T>, thisArg?: any): T {
   let index = findIndex(arr, predicate, thisArg);
   if (index === -1) {
     return null;
@@ -400,21 +370,21 @@ export function find(arr: T[], predicate: (arg0: T) => boolean, thisArg?: any): 
   return arr[index];
 }
 
-export function findFrom(arr, startIndex, predicate, reverse) {
+export function findFrom<T>(arr: T[], startIndex: number, predicate: Predicate<T>, reverse?: boolean): T {
   if (reverse) {
     return findFromReverse(arr, startIndex, predicate);
   }
   return findFromForward(arr, startIndex, predicate);
 }
 
-export function findIndexFrom(arr, startIndex, predicate, reverse) {
+export function findIndexFrom<T>(arr: T[], startIndex: number, predicate: Predicate<T>, reverse?: boolean): number {
   if (reverse) {
     return findIndexFromReverse(arr, startIndex, predicate);
   }
   return findIndexFromForward(arr, startIndex, predicate);
 }
 
-export function findFromForward(arr, startIndex, predicate) {
+export function findFromForward<T>(arr: T[], startIndex: number, predicate: Predicate<T>): T {
   let index = findIndexFromForward(arr, startIndex, predicate);
   if (index === -1) {
     return null;
@@ -422,7 +392,7 @@ export function findFromForward(arr, startIndex, predicate) {
   return arr[index];
 }
 
-export function findIndexFromForward(arr, startIndex, predicate) {
+export function findIndexFromForward<T>(arr: T[], startIndex: number, predicate: (elem: T, index: number) => boolean): number {
   if (!arr || !predicate || startIndex >= arr.length) {
     return -1;
   }
@@ -438,7 +408,7 @@ export function findIndexFromForward(arr, startIndex, predicate) {
   return -1;
 }
 
-export function findFromReverse(arr, startIndex, predicate) {
+export function findFromReverse<T>(arr: T[], startIndex: number, predicate: Predicate<T>): T {
   let index = findIndexFromReverse(arr, startIndex, predicate);
   if (index === -1) {
     return null;
@@ -446,7 +416,7 @@ export function findFromReverse(arr, startIndex, predicate) {
   return arr[index];
 }
 
-export function findIndexFromReverse(arr, startIndex, predicate) {
+export function findIndexFromReverse<T>(arr: T[], startIndex: number, predicate: (elem: T, index: number) => boolean): number {
   if (!arr || !predicate || startIndex < 0) {
     return -1;
   }
@@ -465,7 +435,7 @@ export function findIndexFromReverse(arr, startIndex, predicate) {
 /**
  * Pushes all elements to the given array that are not null or undefined.
  */
-export function pushIfDefined(arr, ...elements) {
+export function pushIfDefined<T>(arr: T[], ...elements: T[]) {
   if (arr) {
     pushAll(arr, elements.filter(element => element !== null && element !== undefined));
   }
@@ -475,7 +445,7 @@ export function pushIfDefined(arr, ...elements) {
  * Pushes the given element if it does not already exist in the array and the element is truthy. Thus the array is like a Set where every element
  * can only be added once to the collection. Note: the comparison is done with the === operator.
  */
-export function pushSet(arr, element) {
+export function pushSet<T>(arr: T[], element: T) {
   if (element && arr.indexOf(element) === -1) {
     arr.push(element);
   }
@@ -504,13 +474,13 @@ export function format(arr: string[], delimiter?: string, encodeHtml?: boolean) 
   return output;
 }
 
-export function formatEncoded(arr, delimiter) {
+export function formatEncoded(arr: string[], delimiter?: string) {
   return format(arr, delimiter, true);
 }
 
-export function max(arr) {
+export function max(arr: number[]): number {
   if (arr === null || arr === undefined) {
-    return Math.max(arr);
+    return Math.max(arr as null | undefined);
   }
 
   // Math.max() returns 0 (not null!) if arr contains only null and negative elements.
@@ -518,9 +488,9 @@ export function max(arr) {
   return Math.max(...filtered);
 }
 
-export function min(arr) {
+export function min(arr: number[]): number {
   if (arr === null || arr === undefined) {
-    return Math.min(arr);
+    return Math.min(arr as null | undefined);
   }
 
   // Math.min() returns 0 (not null!) if arr contains only null and non-negative elements.
@@ -529,15 +499,15 @@ export function min(arr) {
 }
 
 /**
- * @returns {[]} all elements of the first array which are not in the second array
+ * @returns all elements of the first array which are not in the second array
  */
-export function diff(arr1, arr2): [] {
+export function diff<T>(arr1: T[], arr2: T[]): T[] {
   let diff = arr1.slice();
   removeAll(diff, arr2);
   return diff;
 }
 
-export function flatMap(arr, func = (x => x)) {
+export function flatMap<T, R>(arr: T[], func: (T) => R[]): R[] {
   let result = [];
   ensure(arr).forEach(element => {
     pushAll(result, func(element));
@@ -551,7 +521,7 @@ export function flatMap(arr, func = (x => x)) {
  * @param arr The top-level list of all elements
  * @param childrenAccessor Function than extracts a list of child elements from a given element. Used to traverse the object structure.
  */
-export function flattenRec(arr, childrenAccessor) {
+export function flattenRec<T>(arr: T[], childrenAccessor: (T) => T[]): T[] {
   return ensure(arr).reduce((acc, cur) => {
     acc.push(cur);
     if (cur && childrenAccessor) {
@@ -564,7 +534,7 @@ export function flattenRec(arr, childrenAccessor) {
 /**
  * Replacement for indexOf() that works for arrays of jQuery objects (compares DOM nodes).
  */
-export function $indexOf(arr, $element) {
+export function $indexOf(arr: JQuery[], $element: JQuery): number {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i][0] === $element[0]) {
       return i;
@@ -575,14 +545,14 @@ export function $indexOf(arr, $element) {
 /**
  * Replacement for remove() that works for arrays of jQuery objects (compares DOM nodes).
  */
-export function $remove(arr, $element) {
+export function $remove(arr: JQuery[], $element: JQuery) {
   let index = $indexOf(arr, $element);
   if (index >= 0) {
     arr.splice(index, 1);
   }
 }
 
-export function randomElement(array) {
+export function randomElement<T>(array: T[]): T {
   if (!array) {
     return undefined;
   }
@@ -599,13 +569,11 @@ export function randomElement(array) {
  * Converts the given array to a map. For each element, key and value is determined by the given functions.
  * If no function is provided, the element itself is used.
  *
- * @template T
- * @param {T[]} array - array of elements
- * @param {function(T): string} [keyMapper] - function that maps each element to the target key
- * @param {function(T): string} [valueExtractor] - function that maps each element to the target value
- * @returns {object}
+ * @param array array of elements
+ * @param keyMapper function that maps each element to the target key
+ * @param valueExtractor function that maps each element to the target value
  */
-export function toMap(array: T[], keyMapper: (arg0: T) => string = (el => el), valueMapper = (el => el)): object {
+export function toMap<T>(array: T[], keyMapper?: (arg0: T) => string, valueMapper?: (el: T) => any): any {
   return objects.createMap(ensure(array).reduce((map, element) => {
     map[keyMapper(element)] = valueMapper(element);
     return map;
@@ -614,12 +582,8 @@ export function toMap(array: T[], keyMapper: (arg0: T) => string = (el => el), v
 
 /**
  * If the argument is an empty array, null is returned. Otherwise, the argument is returned unchanged.
- *
- * @template T
- * @param {T[]} array
- * @return {T[]|null}
  */
-export function nullIfEmpty(array: T[]): T[] | null {
+export function nullIfEmpty<T>(array: T[]): T[] {
   return empty(array) ? null : array;
 }
 
@@ -630,12 +594,8 @@ export function nullIfEmpty(array: T[]): T[] | null {
  * This is a more readable version of `array.splice(0, a.length)`.
  *
  * The return value is an array of all deleted elements (never null).
- *
- * @template T
- * @param {T[]} array
- * @return {T[]}
  */
-export function clear(array: T[]): T[] {
+export function clear<T>(array: T[]): T[] {
   if (Array.isArray(array)) {
     return array.splice(0, array.length);
   }

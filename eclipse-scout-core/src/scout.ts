@@ -9,7 +9,7 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 
-import {AnyWidget, App, Device, ObjectFactory, objects, strings, ValueField, widgets} from './index';
+import {AnyWidget, App, Device, ModelAdapter, ObjectFactory, objects, Session, strings, ValueField, widgets} from './index';
 import $ from 'jquery';
 
 let $activeElements = null;
@@ -34,10 +34,8 @@ export function nvl(...args) {
  * Use this method in your functions to assert that a mandatory parameter is passed
  * to the function. Throws an error when value is not set.
  *
- * @param parameterName
- * @param value
  * @param type if this optional parameter is set, the given value must be of this type (instanceof check)
- * @return the value
+ * @returns the value
  */
 export function assertParameter<T>(parameterName: string, value?: T, type?): T {
   if (objects.isNullOrUndefined(value)) {
@@ -53,9 +51,9 @@ export function assertParameter<T>(parameterName: string, value?: T, type?): T {
  * Use this method to assert that a mandatory property is set. Throws an error when value is not set.
  *
  * @param type if this parameter is set, the value must be of this type (instanceof check)
- * @return the value (for direct assignment)
+ * @returns the value (for direct assignment)
  */
-export function assertProperty(object, propertyName: string, type?) {
+export function assertProperty(object: object, propertyName: string, type?: new() => any) {
   let value = object[propertyName];
   if (objects.isNullOrUndefined(value)) {
     throw new Error('Missing required property \'' + propertyName + '\'');
@@ -86,7 +84,7 @@ export function assertValue<T>(value: T, msg?: string): T {
  * @param type type to check against with "instanceof"
  * @param msg optional error message when the assertion fails
  */
-export function assertInstance<T>(value: T, type: any, msg?: string): T {
+export function assertInstance<T>(value: T, type: new() => any, msg?: string): T {
   if (!(value instanceof type)) {
     throw new Error(msg || 'Value has wrong type');
   }
@@ -95,10 +93,9 @@ export function assertInstance<T>(value: T, type: any, msg?: string): T {
 
 /**
  * Checks if one of the arguments from 1-n is equal to the first argument.
- * @param value
  * @param args to check against the value, may be an array or a variable argument list.
  */
-export function isOneOf(value, ...args) {
+export function isOneOf(value, ...args): boolean {
   if (args.length === 0) {
     return false;
   }
@@ -110,7 +107,9 @@ export function isOneOf(value, ...args) {
 }
 
 /**
- * Creates a new object instance.<p> Delegates the create call to ObjectFactory#create.
+ * Creates a new object instance.
+ * <p>
+ * Delegates the create call to {@link ObjectFactory.create}.
  */
 export function create<T>(objectType: { new(): T } | string | { objectType: string }, model?: T extends { model: object } ? T['model'] : object, options?): T {
   return ObjectFactory.get().create(objectType, model, options);
@@ -129,7 +128,7 @@ export function create<T>(objectType: { new(): T } | string | { objectType: stri
  * - Add a device / browser class to the body tag to allow for device specific CSS rules.
  * - If the browser is Google Chrome, add a special meta header to prevent automatic translation.
  */
-export function prepareDOM(targetDocument) {
+export function prepareDOM(targetDocument: Document) {
   targetDocument = targetDocument || document;
   // Cleanup DOM
   $('noscript', targetDocument).remove();
@@ -153,7 +152,7 @@ export function prepareDOM(targetDocument) {
 /**
  * Installs a global 'mousedown' interceptor to invoke 'aboutToBlurByMouseDown' on value field before anything else gets executed.
  */
-export function installGlobalMouseDownInterceptor(myDocument) {
+export function installGlobalMouseDownInterceptor(myDocument: Document) {
   myDocument.addEventListener('mousedown', event => {
     ValueField.invokeValueFieldAboutToBlurByMouseDown(event.target || event.srcElement);
   }, true); // true=the event handler is executed in the capturing phase
@@ -168,7 +167,7 @@ export function installGlobalMouseDownInterceptor(myDocument) {
  * Typically you'd write something like this in your CSS:
  *   button:active, button.active { ... }
  */
-export function installSyntheticActiveStateHandler(myDocument) {
+export function installSyntheticActiveStateHandler(myDocument: Document) {
   if (Device.get().requiresSyntheticActiveState()) {
     $activeElements = [];
     $(myDocument)
@@ -191,8 +190,8 @@ export function installSyntheticActiveStateHandler(myDocument) {
 /**
  * Resolves the widget using the given widget id or HTML element.
  * <p>
- * If the argument is a string or a number, it will search the widget hierarchy for the given id using Widget#widget(id).
- * If the argument is a HTML or jQuery element, it will use widgets.get() to get the widget which belongs to the given element.
+ * If the argument is a string or a number, it will search the widget hierarchy for the given id using {@link Widget.widget}.
+ * If the argument is a {@link HTMLElement} or {@link JQuery} element, it will use {@link widgets.get(elem)} to get the widget which belongs to the given element.
  *
  * @param widgetIdOrElement
  *          a widget ID or a HTML or jQuery element
@@ -223,7 +222,7 @@ export function widget(widgetIdOrElement: string | number | HTMLElement | JQuery
  * to be queried. If not specified explicitly, the first session is used. If the session or
  * the adapter could not be found, null is returned.
  */
-export function adapter(adapterId, partId) {
+export function adapter(adapterId: string, partId: string): ModelAdapter {
   if (objects.isNullOrUndefined(adapterId)) {
     return null;
   }
@@ -234,7 +233,10 @@ export function adapter(adapterId, partId) {
   return null;
 }
 
-export function getSession(partId) {
+/**
+ * @returns the session for the given partId. If the partId is omitted, the first session is returned.
+ */
+export function getSession(partId: string): Session {
   let sessions = App.get().sessions;
   if (!sessions) {
     return null;
@@ -259,10 +261,8 @@ export function getSession(partId) {
  * Here's an example of how to call the method:
  *
  * JSON.stringify(exportAdapter(4))
- *
- * @param adapterId
  */
-export function exportAdapter(adapterId, partId) {
+export function exportAdapter(adapterId: string, partId: string) { // FIXME TS add return value
   let session = getSession(partId);
   if (session && session.modelAdapterRegistry) {
     let adapter = session.getModelAdapter(adapterId);
@@ -312,21 +312,28 @@ export function exportAdapter(adapterId, partId) {
   }
 }
 
+export interface ReloadPageOptions {
+  /**
+   * If true, the page reload is not executed in the current thread but scheduled using setTimeout().
+   * This is useful if the caller wants to execute some other code before the reload. The default is false.
+   */
+  schedule: boolean;
+  /**
+   * If true, the body is cleared first before the reload is performed. This is useful to prevent
+   * showing "old" content in the browser until the new content arrives. The default is true.
+   */
+  clearBody: boolean;
+  /**
+   * The new URL to load. If not specified, the current location is used (window.location).
+   */
+  redirectUrl: string;
+}
+
 /**
  * Reloads the entire browser window.
- *
- * @param [options]
- * @param [options.schedule]
- *     If true, the page reload is not executed in the current thread but scheduled using setTimeout().
- *     This is useful if the caller wants to execute some other code before the reload. The default is false.
- * @param [options.clearBody]
- *     If true, the body is cleared first before the reload is performed. This is useful to prevent
- *     showing "old" content in the browser until the new content arrives. The default is true.
- * @param [options.redirectUrl]
- *      The new URL to load. If not specified, the current location is used (window.location).
  */
-export function reloadPage(options) {
-  options = options || {};
+export function reloadPage(options: ReloadPageOptions) {
+  options = options || {} as ReloadPageOptions;
   if (options.schedule) {
     setTimeout(reloadPageImpl);
   } else {
@@ -350,12 +357,12 @@ export function reloadPage(options) {
 }
 
 /**
- * @param {object} factories Object that contains the object type as key and the function that constructs the object as value.
+ * @param factories Object that contains the object type as key and the function that constructs the object as value.
  * <p>
  * If you prefer using a class reference as object type rather than a string, please use {@link addObjectFactory} to register your factory.
  * @see create
  */
-export function addObjectFactories(factories: object) {
+export function addObjectFactories(factories: { [objectType: string]: (model?) => any }) {
   for (let [objectType, factory] of Object.entries(factories)) {
     addObjectFactory(objectType, factory);
   }
@@ -370,7 +377,7 @@ export function addObjectFactory(objectType: string | { new (): object }, factor
   objectFactories.set(objectType, factory);
 }
 
-export function cloneShallow(template, properties, createUniqueId) {
+export function cloneShallow(template: object, properties?: object, createUniqueId?: boolean): object {
   assertParameter('template', template);
   let clone = Object.create(Object.getPrototypeOf(template));
   Object.getOwnPropertyNames(template)

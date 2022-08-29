@@ -29,7 +29,7 @@ export default class EllipsisMenu extends Menu {
     this._addPreserveOnPropertyChangeProperties(['childActions']);
   }
 
-  _render() {
+  protected _render() {
     super._render();
     this.$container.addClass('ellipsis');
   }
@@ -45,17 +45,17 @@ export default class EllipsisMenu extends Menu {
     }
   }
 
-  _renderProperties() {
+  protected _renderProperties() {
     super._renderProperties();
     this._renderHidden();
   }
 
   // add the set hidden function to the ellipsis
-  setHidden(hidden) {
+  setHidden(hidden: boolean) {
     this.setProperty('hidden', hidden);
   }
 
-  _renderHidden() {
+  protected _renderHidden() {
     this.$container.setVisible(!this.hidden);
   }
 
@@ -63,7 +63,7 @@ export default class EllipsisMenu extends Menu {
     return super.isTabTarget() && !this.hidden;
   }
 
-  _childrenForEnabledComputed() {
+  protected _childrenForEnabledComputed() {
     return this.childActions;
   }
 }

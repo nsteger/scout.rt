@@ -12,9 +12,9 @@ import {LoadingSupportOptions, scout} from '../index';
 import WidgetSupport from './WidgetSupport';
 
 export default class LoadingSupport extends WidgetSupport {
-  loadingIndicatorDelay: any;
+  loadingIndicatorDelay: number;
   protected _$loadingIndicator: JQuery;
-  protected _loadingIndicatorTimeoutId: any;
+  protected _loadingIndicatorTimeoutId: string;
 
   /**
    * @param options a mandatory options object
@@ -27,7 +27,7 @@ export default class LoadingSupport extends WidgetSupport {
     this._loadingIndicatorTimeoutId = null;
   }
 
-  setLoadingIndicatorDelay(loadingIndicatorDelay) {
+  setLoadingIndicatorDelay(loadingIndicatorDelay: number) {
     this.loadingIndicatorDelay = loadingIndicatorDelay;
   }
 
@@ -52,6 +52,7 @@ export default class LoadingSupport extends WidgetSupport {
     if (this.widget.isLoading()) {
       // add loading indicator
       if (this.loadingIndicatorDelay && !this.widget.rendering) {
+        // @ts-ignore // FIXME TS how to not take NodeJs timeout function?
         this._loadingIndicatorTimeoutId = setTimeout(
           this._renderLoadingIndicator.bind(this), this.loadingIndicatorDelay);
       } else {

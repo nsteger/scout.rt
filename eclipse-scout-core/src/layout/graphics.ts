@@ -51,7 +51,7 @@ import $ from 'jquery';
  *          an optional options object (see table above). Short-hand version: If a boolean is passed instead
  *          of an object, the value is automatically converted to the option "includeMargin".
  */
-export function prefSize($elem, options) {
+export function prefSize($elem: JQuery, options) {
   // Return 0/0 if element is not displayed (display: none).
   // We don't use isVisible by purpose because isVisible returns false for elements with visibility: hidden which is wrong here (we would like to be able to measure hidden elements)
   if (!$elem[0] || $elem.isDisplayNone()) {
@@ -145,7 +145,7 @@ export function exactPrefSize(prefSize, options) {
  * This may be necessary because the animation might change the size of the element.
  * If prefSize is called during the animation, the current size is returned instead of the one after the animation.
  */
-export function prefSizeWithoutAnimation($elem, options) {
+export function prefSizeWithoutAnimation($elem: JQuery, options) {
   let animateClasses = arrays.ensure(options.animateClasses);
   animateClasses = animateClasses.filter(cssClass => {
     return $elem.hasClass(cssClass);
@@ -184,7 +184,7 @@ export function prefSizeWithoutAnimation($elem, options) {
  * @param {boolean} [options.exact] When set to true the returned dimensions may contain fractional digits, otherwise the sizes are rounded up. Default is false.
  * @returns {Dimension}
  */
-export function size($elem, options) {
+export function size($elem: JQuery, options?: object | boolean): Dimension {
   if (!$elem[0] || $elem.isDisplayNone()) {
     return new Dimension(0, 0);
   }
@@ -216,25 +216,25 @@ export function size($elem, options) {
 /**
  * @returns {Dimension} the size of the element specified by the style.
  */
-export function cssSize($elem) {
+export function cssSize($elem: JQuery): Dimension {
   return new Dimension($elem.cssWidth(), $elem.cssHeight());
 }
 
 /**
  * @returns {Dimension} the max size of the element specified by the style.
  */
-export function cssMaxSize($elem) {
+export function cssMaxSize($elem: JQuery): Dimension {
   return new Dimension($elem.cssMaxWidth(), $elem.cssMaxHeight());
 }
 
 /**
  * @returns {Dimension} the min size of the element specified by the style.
  */
-export function cssMinSize($elem) {
+export function cssMinSize($elem: JQuery): Dimension {
   return new Dimension($elem.cssMinWidth(), $elem.cssMinHeight());
 }
 
-export function setSize($comp, vararg, height) {
+export function setSize($comp: JQuery, vararg, height: number) {
   let size = vararg instanceof Dimension ?
     vararg : new Dimension(vararg, height);
   $comp
@@ -259,7 +259,7 @@ export function setSize($comp, vararg, height) {
  *          an optional options object (see table above). Short-hand version: If a boolean is passed instead
  *          of an object, the value is automatically converted to the option "includeMargin".
  */
-export function insets($comp, options) {
+export function insets($comp: JQuery, options) {
   if (typeof options === 'boolean') {
     options = {
       includeMargin: options
@@ -289,7 +289,7 @@ export function insets($comp, options) {
   return new Insets(insets[0], insets[1], insets[2], insets[3]);
 }
 
-export function margins($comp) {
+export function margins($comp: JQuery) {
   return insets($comp, {
     includeMargin: true,
     includePadding: false,
@@ -297,7 +297,7 @@ export function margins($comp) {
   });
 }
 
-export function setMargins($comp, margins) {
+export function setMargins($comp: JQuery, margins) {
   $comp.css({
     marginLeft: margins.left,
     marginRight: margins.right,
@@ -306,7 +306,7 @@ export function setMargins($comp, margins) {
   });
 }
 
-export function paddings($comp) {
+export function paddings($comp: JQuery) {
   return insets($comp, {
     includeMargin: false,
     includePadding: true,
@@ -314,7 +314,7 @@ export function paddings($comp) {
   });
 }
 
-export function borders($comp) {
+export function borders($comp: JQuery) {
   return insets($comp, {
     includeMargin: false,
     includePadding: false,
@@ -328,7 +328,7 @@ export function borders($comp) {
  * @param y (optional) integer value for Y position
  * @returns
  */
-export function setLocation($comp, vararg, y) {
+export function setLocation($comp: JQuery, vararg, y: number) {
   let point = vararg instanceof Point ?
     vararg : new Point(vararg, y);
   $comp
@@ -340,7 +340,7 @@ export function setLocation($comp, vararg, y) {
  * Returns a Point consisting of the component's "cssLeft" and
  * "cssTop" values (reverse operation to setLocation).
  */
-export function location($comp) {
+export function location($comp: JQuery) {
   return new Point($comp.cssLeft(), $comp.cssTop());
 }
 
@@ -360,14 +360,14 @@ export function location($comp) {
  *          an optional options object (see table above). Short-hand version: If a boolean is passed instead
  *          of an object, the value is automatically converted to the option "includeMargin".
  */
-export function bounds($elem, options) {
+export function bounds($elem: JQuery, options) {
   return _bounds($elem, $elem.position(), options);
 }
 
 /**
  * @returns {Point} the position relative to the offset parent ($elem.position()).
  */
-export function position($elem) {
+export function position($elem: JQuery): Point {
   let pos = $elem.position();
   return new Point(pos.left, pos.top);
 }
@@ -388,24 +388,24 @@ export function position($elem) {
  *          an optional options object (see table above). Short-hand version: If a boolean is passed instead
  *          of an object, the value is automatically converted to the option "includeMargin".
  */
-export function offsetBounds($elem, options) {
+export function offsetBounds($elem: JQuery, options) {
   return _bounds($elem, $elem.offset(), options);
 }
 
 /**
  * @returns {Point} the position relative to the document ($elem.offset()).
  */
-export function offset($elem) {
+export function offset($elem: JQuery): Point {
   let pos = $elem.offset();
   return new Point(pos.left, pos.top);
 }
 
-export function _bounds($elem, pos, options) {
+export function _bounds($elem: JQuery, pos, options) {
   let s = size($elem, options);
   return new Rectangle(pos.left, pos.top, s.width, s.height);
 }
 
-export function setBounds($comp, vararg, y, width, height) {
+export function setBounds($comp: JQuery, vararg, y: number, width: number, height: number) {
   let bounds = vararg instanceof Rectangle ?
     vararg : new Rectangle(vararg, y, width, height);
   $comp
@@ -418,11 +418,11 @@ export function setBounds($comp, vararg, y, width, height) {
 /**
  * @returns {Rectangle} the bounds of the element specified by the style.
  */
-export function cssBounds($elem) {
+export function cssBounds($elem: JQuery): Rectangle {
   return new Rectangle($elem.cssLeft(), $elem.cssTop(), $elem.cssWidth(), $elem.cssHeight());
 }
 
-export function debugOutput($comp) {
+export function debugOutput($comp: JQuery) {
   if (!$comp) {
     return '$comp is undefined';
   }

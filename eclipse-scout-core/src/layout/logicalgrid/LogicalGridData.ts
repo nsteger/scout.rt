@@ -110,7 +110,7 @@ export default class LogicalGridData implements LayoutData {
     return d;
   }
 
-  protected _inheritWeightYRec(widget) {
+  protected _inheritWeightYRec(widget: Widget) {
     let found = false,
       sumWy = 0;
 

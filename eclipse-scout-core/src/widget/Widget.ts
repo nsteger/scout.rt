@@ -8,7 +8,7 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {AnyWidget, arrays, DeferredGlassPaneTarget, Desktop, Device, EnumObject, EventDelegator, EventEmitter, EventHandler, filters, focusUtils, Form, graphics, HtmlComponent, icons, inspector, KeyStroke, KeyStrokeContext, LayoutData, LoadingSupport, LogicalGrid, objects, Predicate, PropertyEventEmitter, scout, scrollbars, Session, strings, texts, TreeVisitResult, WidgetModel} from '../index';
+import {AnyWidget, arrays, DeferredGlassPaneTarget, Desktop, Device, EnumObject, EventDelegator, EventEmitter, EventHandler, filters, focusUtils, Form, graphics, HtmlComponent, icons, inspector, KeyStroke, KeyStrokeContext, LayoutData, LoadingSupport, LogicalGrid, objects, Predicate, PropertyEventEmitter, scout, scrollbars, Session, strings, texts, TreeVisitResult, WidgetEvent, WidgetModel} from '../index';
 import * as $ from 'jquery';
 import {RefWidgetModel} from './WidgetModel';
 
@@ -78,8 +78,8 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
   protected _cloneProperties: string[];
   protected _focusInListener: JQuery.EventHandler<HTMLElement>;
   protected _glassPaneContributions: GlassPaneContribution[];
-  protected _parentDestroyHandler: EventHandler<'destroy'>;
-  protected _parentRemovingWhileAnimatingHandler: EventHandler<'remove'>;
+  protected _parentDestroyHandler: EventHandler<WidgetEvent>;
+  protected _parentRemovingWhileAnimatingHandler: EventHandler<WidgetEvent>;
   protected _postRenderActions: (() => void)[];
   protected _preserveOnPropertyChangeProperties: string[];
   protected _rendered: boolean;
@@ -210,8 +210,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
         model = $.extend({}, staticModel, model);
       }
     }
-    // @ts-ignore
-    model = model || {};
+    model = model || {} as WidgetModel;
     model = this._prepareModel(model);
     this._init(model);
     this._initKeyStrokeContext();
@@ -832,6 +831,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     if (this.session.desktop) {
       return this.session.desktop;
     }
+    // @ts-ignore // FIXME TS remove after rename from Desktop.js to Desktop.TS
     return this.findParent(parent => parent instanceof Desktop) as Desktop;
   }
 
@@ -2074,7 +2074,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     }
     let $target = $(event.target);
     // @ts-ignore
-    if (this.$container.has($target)) { // TODO ts does this work? according to signature has accepts only elements, not JQuery elements
+    if (this.$container.has($target)) { // FIXME TS does this work? according to signature has accepts only elements, not JQuery elements
       this._$lastFocusedElement = $target;
     }
   }
@@ -2150,7 +2150,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     return null;
   }
 
-  protected _installScrollbars(options?: object) { // TODO TS define options
+  protected _installScrollbars(options?: object) { // FIXME TS define options
     let $scrollable = this.get$Scrollable();
     if (!$scrollable) {
       throw new Error('Scrollable is not defined, cannot install scrollbars');
@@ -2248,7 +2248,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     return this.$container;
   }
 
-  hasScrollShadow(position) { // TODO TS define available positions
+  hasScrollShadow(position) { // FIXME TS define available positions
     return scrollbars.hasScrollShadow(this.get$Scrollable(), position);
   }
 
@@ -2260,7 +2260,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     return null;
   }
 
-  scrollToTop(options?) { // TODO TS define options
+  scrollToTop(options?) { // FIXME TS define options
     if (this.getDelegateScrollable()) {
       this.getDelegateScrollable().scrollToTop();
       return;
@@ -2276,7 +2276,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
     scrollbars.scrollTop($scrollable, 0, options);
   }
 
-  scrollToBottom(options?) { // TODO TS define options
+  scrollToBottom(options?) { // FIXME TS define options
     if (this.getDelegateScrollable()) {
       this.getDelegateScrollable().scrollToBottom();
       return;
@@ -2295,7 +2295,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
   /**
    * Brings the widget into view by scrolling the first scrollable parent.
    */
-  reveal(options) { // TODO TS define options
+  reveal(options) { // FIXME TS define options
     if (!this.rendered) {
       return;
     }
@@ -2346,7 +2346,7 @@ export default class Widget extends PropertyEventEmitter implements WidgetModel 
 
   /* --- STATIC HELPERS ------------------------------------------------------------- */
 
-  static cssClassAsArray(cssClass): string[] {
+  static cssClassAsArray(cssClass: string): string[] {
     let cssClasses = [],
       cssClassesStr = cssClass || '';
 

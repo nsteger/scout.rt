@@ -18,6 +18,7 @@ import $ from 'jquery';
  * - preferredLayoutSize
  */
 export default class AbstractLayout {
+  animateClasses: any[];
 
   constructor() {
     this.animateClasses = [];
@@ -38,14 +39,14 @@ export default class AbstractLayout {
    *
    * Must be implemented by sub-class.
    */
-  layout($container) { //
+  layout($container: JQuery) { //
   }
 
   /**
    * Reverts the adjustments made by {@link HtmlComponent#_adjustSizeHintsForPrefSize} without the margin.
    * More concrete: it adds border and padding to the hints again.
    */
-  _revertSizeHintsAdjustments($container, options) {
+  protected _revertSizeHintsAdjustments($container: JQuery, options) {
     let htmlContainer = HtmlComponent.get($container);
     if (options.widthHint) {
       options.widthHint += htmlContainer.insets().horizontal();
@@ -60,7 +61,7 @@ export default class AbstractLayout {
    *
    * @return Dimension preferred size
    */
-  preferredLayoutSize($container, options) {
+  preferredLayoutSize($container: JQuery, options) {
     options = $.extend({}, options);
     if (this.animateClasses.length > 0) {
       options.animateClasses = this.animateClasses;

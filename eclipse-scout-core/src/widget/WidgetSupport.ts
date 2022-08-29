@@ -11,20 +11,12 @@
 import {scout, Widget, WidgetSupportOptions} from '../index';
 
 export default class WidgetSupport {
-  options$Container: JQuery | Function;
+  options$Container: JQuery | (() => JQuery);
   widget: Widget;
   $container: JQuery;
 
   /**
-   * @typedef WidgetSupportOptions
-   * @property {Widget} widget Widget that created the support
-   * @property {$|function} [$container] jQuery element that will be used for the visualization.
-   *  It may be a function to resolve the container later.
-   *  If this property is not set the $container of the widget is used by default.
-   */
-
-  /**
-   * @param {WidgetSupportOptions} options a mandatory options object
+   * @param options a mandatory options object
    */
   constructor(options: WidgetSupportOptions) {
     scout.assertParameter('widget', options.widget);

@@ -8,9 +8,9 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {Event, EventMap, EventSupport} from '../index';
+import {Event, EventMap, EventSupport, EventListener} from '../index';
 
-export interface EventHandler<K> {
+export interface EventHandler<K = Event> {
   (event: K): void;
 }
 
@@ -28,7 +28,7 @@ export default class EventEmitter {
     this.events = this._createEventSupport();
   }
 
-  protected _createEventSupport() {
+  protected _createEventSupport(): EventSupport {
     return new EventSupport();
   }
 
@@ -50,7 +50,7 @@ export default class EventEmitter {
    * @param type One or more event names separated by space.
    * @param handler Event handler executed when the event is triggered. An event object is passed to the function as first parameter
    */
-  one<K extends string & keyof EventMap>(type: K, handler: EventHandler<K>) {
+  one<K extends string & keyof EventMap>(type: K, handler: EventHandler<EventMap[K]>) {
     this.events.one(type, handler);
   }
 
@@ -72,23 +72,23 @@ export default class EventEmitter {
    * @param handler The exact same event handler that was used for registration using {@link on} or {@link one}.
    *      If no handler is specified, all handlers are de-registered for the given type.
    */
-  off<K extends string & keyof EventMap>(type: K, handler?: EventHandler<K>) {
+  off<K extends string & keyof EventMap>(type: K, handler?: EventHandler<EventMap[K]>) {
     this.events.off(type, handler);
-  }
-
-  addListener(listener) {
-    this.events.addListener(listener);
-  }
-
-  removeListener(listener) {
-    this.events.removeListener(listener);
   }
 
   /**
    * Adds an event handler using {@link one} and returns a promise.
    * The promise is resolved as soon as the event is triggered.
    */
-  when(type): JQuery.Promise<any> {
+  when<K extends string & keyof EventMap>(type: K): JQuery.Promise<EventMap[K]> {
     return this.events.when(type);
+  }
+
+  addListener(listener: EventListener) {
+    this.events.addListener(listener);
+  }
+
+  removeListener(listener: EventListener) {
+    this.events.removeListener(listener);
   }
 }

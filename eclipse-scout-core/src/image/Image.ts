@@ -9,8 +9,12 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 import {Device, HtmlComponent, ImageLayout, Widget} from '../index';
+import ImageModel from './ImageModel';
 
-export default class Image extends Widget {
+export default class Image extends Widget implements ImageModel {
+  autoFit: boolean;
+  imageUrl: string;
+  prepend: boolean;
 
   constructor() {
     super();
@@ -19,7 +23,11 @@ export default class Image extends Widget {
     this.prepend = false;
   }
 
-  _render() {
+  init(model: ImageModel) { // FIXME TS better use generic?
+    super.init(model);
+  }
+
+  protected _render() {
     this.$container = this.$parent.makeElement('<img>', 'image')
       .addDeviceClass()
       .on('load', this._onImageLoad.bind(this))
@@ -36,22 +44,22 @@ export default class Image extends Widget {
     this.htmlComp.pixelBasedSizing = false;
   }
 
-  _renderProperties() {
+  protected _renderProperties() {
     super._renderProperties();
     this._renderImageUrl();
     this._renderAutoFit();
   }
 
-  _remove() {
+  protected _remove() {
     super._remove();
     this.htmlComp = null;
   }
 
-  setImageUrl(imageUrl) {
+  setImageUrl(imageUrl: string) {
     this.setProperty('imageUrl', imageUrl);
   }
 
-  _renderImageUrl() {
+  protected _renderImageUrl() {
     this.$container.attr('src', this.imageUrl);
 
     // Hide <img> when it has no content (event 'load' will not fire)
@@ -60,15 +68,15 @@ export default class Image extends Widget {
     }
   }
 
-  setAutoFit(autoFit) {
+  setAutoFit(autoFit: boolean) {
     this.setProperty('autoFit', autoFit);
   }
 
-  _renderAutoFit() {
+  protected _renderAutoFit() {
     this.$container.toggleClass('autofit', this.autoFit);
   }
 
-  _onImageLoad(event) {
+  protected _onImageLoad(event) {
     if (!this.rendered) { // check needed, because this is an async callback
       return;
     }
@@ -83,7 +91,7 @@ export default class Image extends Widget {
    * under certain conditions. For details: https://bugs.chromium.org/p/chromium/issues/detail?id=950881
    * The workaround sets a CSS attribute which forces Chrome to revalidate its internal layout.
    */
-  _ensureImageLayout() {
+  protected _ensureImageLayout() {
     if (!Device.get().isChrome()) {
       return;
     }
@@ -95,7 +103,7 @@ export default class Image extends Widget {
     });
   }
 
-  _onImageError(event) {
+  protected _onImageError(event) {
     if (!this.rendered) { // check needed, because this is an async callback
       return;
     }

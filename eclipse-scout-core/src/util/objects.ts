@@ -22,7 +22,7 @@ const CONST_REGEX = /\${const:([^}]*)}/;
  *
  * @param [object] properties optional initial properties to be set on the new created object
  */
-export function createMap(properties) {
+export function createMap(properties?) {
   let map = Object.create(null);
   if (properties) {
     $.extend(map, properties);
@@ -35,7 +35,7 @@ export function createMap(properties) {
  * @param {[]} [filter] an array of property names.
  * @returns {object} the destination object (the destination parameter will be modified as well)
  */
-export function copyProperties(source, dest, filter) {
+export function copyProperties(source, dest, filter?: []): object {
   let propertyName;
   filter = arrays.ensure(filter);
   for (propertyName in source) {
@@ -49,10 +49,10 @@ export function copyProperties(source, dest, filter) {
 /**
  * Copies the own properties (excluding the ones from the prototype) from dest to source.
  * If a filter is specified, only the properties matching the ones in the filter are copied.
- * @param {[]} [filter] an array of property names.
- * @returns {object} the destination object (the destination parameter will be modified as well)
+ * @param filter an array of property names.
+ * @returns the destination object (the destination parameter will be modified as well)
  */
-export function copyOwnProperties(source, dest, filter) {
+export function copyOwnProperties(source: object, dest: object, filter?: string[]): object { // FIXME TS migrate code to Object.assign or $.extend
   let propertyName;
   filter = arrays.ensure(filter);
   for (propertyName in source) {
@@ -105,7 +105,7 @@ export function extractProperties(source, dest, properties) {
  * @param properties a single property or an array of properties
  * @returns {Boolean}
  */
-export function someOwnProperties(obj, properties) {
+export function someOwnProperties(obj, properties): boolean {
   let propArr = arrays.ensure(properties);
   return propArr.some(prop => {
     return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -121,7 +121,7 @@ export function someOwnProperties(obj, properties) {
  * @param properties a single property or an array of properties
  * @returns {Boolean}
  */
-export function someProperties(obj, properties) {
+export function someProperties(obj, properties): boolean {
   let propArr = arrays.ensure(properties);
   return propArr.some(prop => {
     return prop in obj;
@@ -131,7 +131,7 @@ export function someProperties(obj, properties) {
 /**
  * @return {*}
  */
-export function valueCopy(obj) {
+export function valueCopy(obj): any {
   // Nothing to be done for immutable things
   if (obj === undefined || obj === null || typeof obj !== 'object') {
     return obj;
@@ -162,7 +162,7 @@ export function valueCopy(obj) {
  * @param propertyValue value of the property
  * @returns {Object}
  */
-export function findChildObjectByKey(parentObj, property, propertyValue) {
+export function findChildObjectByKey(parentObj, property, propertyValue): object {
   if (parentObj === undefined || parentObj === null || typeof parentObj !== 'object') {
     return null;
   }
@@ -312,7 +312,7 @@ export function isPlainObject(obj) {
  *
  * @returns {*} the value of the requested property or undefined if the property does not exist on the object
  */
-export function optProperty(obj, ...properties) {
+export function optProperty(obj, ...properties): any {
   if (!obj) {
     return null;
   }
@@ -349,7 +349,7 @@ export function optProperty(obj, ...properties) {
  * @param obj
  * @returns {Boolean}
  */
-export function isNumber(obj) {
+export function isNumber(obj): boolean {
   return obj !== null && !isNaN(obj) && isFinite(obj) && !isNaN(parseFloat(obj));
 }
 
@@ -378,7 +378,7 @@ export function isArray(obj) {
  *       Checking for promise would require to check the behavior which is not possible. So you could provide an object
  *       with a "then" function that does not conform to the Promises/A+ spec but this method would still return true.
  */
-export function isPromise(value) {
+export function isPromise(value: any): boolean {
   return !!value && typeof value === 'object' && typeof value.then === 'function';
 }
 
@@ -389,7 +389,7 @@ export function isPromise(value) {
  * @param {Object} obj
  * @param {boolean} [all] can be set to true to return all properties instead of own properties
  */
-export function values(obj, all) {
+export function values(obj: object, all?: boolean): Array<any> {
   let values = [];
   if (obj) {
     if (typeof obj.hasOwnProperty !== 'function') {
@@ -407,7 +407,7 @@ export function values(obj, all) {
 /**
  * @returns {string} the key / name of a property
  */
-export function keyByValue(obj, value) {
+export function keyByValue(obj, value): string {
   return Object.keys(obj)[values(obj).indexOf(value)];
 }
 
@@ -417,7 +417,7 @@ export function keyByValue(obj, value) {
  * by value.
  * @returns {boolean} true if both objects are equals by reference or by value
  */
-export function equals(objA, objB) {
+export function equals(objA, objB): boolean {
   if (objA === objB) {
     return true;
   }
@@ -432,7 +432,7 @@ export function equals(objA, objB) {
  * Compare two objects and all its child elements recursively.
  * @returns {boolean} true if both objects and all child elements are equals by value or implemented equals method
  */
-export function equalsRecursive(objA, objB) {
+export function equalsRecursive(objA, objB): boolean {
   let i;
   if (isPlainObject(objA) && isPlainObject(objB)) {
     if (isFunction(objA.equals) && isFunction(objB.equals)) {
@@ -483,7 +483,7 @@ export function propertiesEquals(objA, objB, properties) {
  *     if that function does not exist. Use this function if you modify an existing framework function
  *     to find problems after refactorings / renamings as soon as possible.
  */
-export function mandatoryFunction(obj, funcName) {
+export function mandatoryFunction(obj, funcName): Function {
   let func = obj[funcName];
   if (!func || typeof func !== 'function') {
     throw new Error('Function \'' + funcName + '\' does not exist on object. Check if it has been renamed or moved. Object: ' + obj);
@@ -659,7 +659,7 @@ export function checkFunctionOverrides() {
  * @param {string} value text which contains a constant reference like '${const:FormField.LabelPosition.RIGHT}'.
  * @return {any} the resolved constant value or the unchanged input value if the constant could not be resolved.
  */
-export function resolveConst(value, constType) {
+export function resolveConst(value: string, constType): any {
   if (!isString(value)) {
     return value;
   }

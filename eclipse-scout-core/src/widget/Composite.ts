@@ -8,9 +8,10 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {HtmlComponent, Widget} from '../index';
+import {CompositeModel, HtmlComponent, Widget} from '../index';
 
-export default class Composite extends Widget {
+export default class Composite extends Widget implements CompositeModel {
+  widgets: Widget[];
 
   constructor() {
     super();
@@ -19,24 +20,22 @@ export default class Composite extends Widget {
     this._addWidgetProperties(['widgets']);
   }
 
-  _render() {
+  protected _render() {
     this.$container = this.$parent.appendDiv();
     this.htmlComp = HtmlComponent.install(this.$container, this.session);
   }
 
-  _renderProperties() {
+  protected _renderProperties() {
     super._renderProperties();
     this._renderWidgets();
   }
 
-  setWidgets(widgets) {
+  setWidgets(widgets: Widget[]) {
     this.setProperty('widgets', widgets);
   }
 
-  _renderWidgets() {
-    this.widgets.forEach(widget => {
-      widget.render();
-    }, this);
+  protected _renderWidgets() {
+    this.widgets.forEach(widget => widget.render());
     this.invalidateLayoutTree();
   }
 }

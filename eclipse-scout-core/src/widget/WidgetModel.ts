@@ -13,7 +13,7 @@ export default interface WidgetModel {
   session?: Session;
   objectType?: string | { new(): Widget };
 
-  [property: string]: any; // TODO CGU necessary for variable model properties, required?
+  [property: string]: any; // FIXME TS necessary for variable model properties, required?
 }
 
 export type RefWidgetModel<T extends WidgetModel> = PartialAndRequired<T, 'parent', 'objectType'>;
