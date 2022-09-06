@@ -698,6 +698,10 @@ export {default as BreadcrumbBarLayout} from './breadcrumbbar/BreadcrumbBarLayou
 export {default as BreadcrumbBarAdapter} from './breadcrumbbar/BreadcrumbBarAdapter';
 export {default as BreadcrumbBarField} from './form/fields/breadcrumbbarfield/BreadcrumbBarField';
 export {default as BreadcrumbBarFieldAdapter} from './form/fields/breadcrumbbarfield/BreadcrumbBarFieldAdapter';
+// <--- scout commit pending
+export {default as JsEventManager} from './form/hybriddesktop/JsEventManager';
+export {default as JsEventManagerAdapter} from './form/hybriddesktop/JsEventManagerAdapter';
+// ----->
 
 // The following files don't export anything but they need to be imported so they participate on the webpack build
 // noinspection ES6UnusedImports

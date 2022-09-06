@@ -98,6 +98,7 @@ import org.eclipse.scout.rt.client.ui.form.fields.treebox.ITreeBox;
 import org.eclipse.scout.rt.client.ui.form.fields.treefield.ITreeField;
 import org.eclipse.scout.rt.client.ui.form.fields.wizard.IWizardProgressField;
 import org.eclipse.scout.rt.client.ui.form.fields.wrappedform.IWrappedFormField;
+import org.eclipse.scout.rt.client.ui.form.hybriddesktop.JsEventManager;
 import org.eclipse.scout.rt.client.ui.form.js.IJsForm;
 import org.eclipse.scout.rt.client.ui.group.IGroup;
 import org.eclipse.scout.rt.client.ui.label.ILabel;
@@ -143,6 +144,7 @@ import org.eclipse.scout.rt.ui.html.json.desktop.JsonOutlineTileField;
 import org.eclipse.scout.rt.ui.html.json.desktop.JsonOutlineViewButton;
 import org.eclipse.scout.rt.ui.html.json.desktop.JsonSearchOutline;
 import org.eclipse.scout.rt.ui.html.json.desktop.JsonViewButton;
+import org.eclipse.scout.rt.ui.html.json.desktop.hybriddesktop.JsonJsEventManager;
 import org.eclipse.scout.rt.ui.html.json.form.JsonForm;
 import org.eclipse.scout.rt.ui.html.json.form.JsonTileOverviewForm;
 import org.eclipse.scout.rt.ui.html.json.form.fields.JsonDateField;
@@ -501,6 +503,9 @@ public class JsonObjectFactory extends AbstractJsonObjectFactory {
     }
     if (model instanceof IPopup) {
       return new JsonPopup((IPopup) model, session, id, parent);
+    }
+    if (model instanceof JsEventManager) {
+      return new JsonJsEventManager<>((JsEventManager) model, session, id, parent);
     }
     return null;
   }
