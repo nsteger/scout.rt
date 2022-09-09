@@ -42,7 +42,9 @@ export default class PageLayout extends AbstractLayout {
     if (nodeMenuBar.visible) {
       nodeMenuBarPrefSize = nodeMenuBar.htmlComp.prefSize();
       nodeMenuBar.htmlComp.setSize(nodeMenuBarPrefSize);
-      textWidth -= nodeMenuBarPrefSize.add(nodeMenuBar.htmlComp.margins()).width;
+      // Read actual size to ensure text will have the correct size as well. If the text is too large, node menu bar will wrap which must not happen.
+      let nodeMenuBarWidth = nodeMenuBar.htmlComp.size({includeMargin: true, exact: true}).width;
+      textWidth -= nodeMenuBarWidth;
     }
 
     $text.cssWidth(textWidth);
@@ -93,7 +95,8 @@ export default class PageLayout extends AbstractLayout {
     // needs a width to be able to calculate the pref height
     textHeight = graphics.prefSize($text, {
       includeMargin: true,
-      widthHint: textWidth
+      widthHint: textWidth,
+      enforceSizeHints: true
     }).height;
 
     if ($icon.length > 0) {
@@ -106,6 +109,7 @@ export default class PageLayout extends AbstractLayout {
     }
     if (this.outline.detailContent) {
       let htmlDetailContent = this.outline.detailContent.htmlComp;
+      options = $.extend({}, options, {enforceSizeHints: true});
       detailContentPrefSize = htmlDetailContent.prefSize(options).add(htmlDetailContent.margins());
     }
 
