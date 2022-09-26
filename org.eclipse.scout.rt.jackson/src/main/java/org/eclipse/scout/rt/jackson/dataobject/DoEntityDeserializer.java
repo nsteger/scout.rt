@@ -141,34 +141,35 @@ public class DoEntityDeserializer extends StdDeserializer<IDoEntity> {
     for (JsonToken t = p.currentToken(); t == JsonToken.FIELD_NAME; t = p.nextToken()) {
       String attributeName = p.getCurrentName();
       p.nextToken(); // let current token point to the value
-      AttributeType attributeType = findResolvedAttributeType(entity, attributeName, p.currentToken());
-      if (attributeType.isDoCollection()) {
-        DoNode<?> nodeValue = readAttributeValue(p, attributeType, attributeName);
 
-        // check if reading the 'contributions' property
-        if (m_moduleContext.getContributionsAttributeName().equals(attributeName)) {
-          //noinspection unchecked
-          m_doEntityDeserializerTypeStrategy.putContributions(entity, attributeName, ((AbstractDoCollection<?, Collection<?>>) nodeValue).get());
-        }
-        else {
-          entity.putNode(attributeName, nodeValue);
-        }
+      // check if reading the 'type version' property
+      if (m_moduleContext.getTypeVersionAttributeName().equals(attributeName)) {
+        AttributeType at = AttributeType.ofDoValue(TypeFactory.defaultInstance().constructType(String.class));
+        Object value = readAttributeValue(p, at, attributeName);
+        deserializeDoEntityVersionAttribute(entity, attributeName, value);
       }
       else {
-        Object value = readAttributeValue(p, attributeType, attributeName);
-
-        if (value instanceof IDoCollection) {
-          // special case: Java collections referenced by a DoValue are handled as DoList, so that nested elements are
-          //               deserialized into data object structures (i.e. Do-classes), rather than Maps, such as Jackson's
-          //               default collection deserializer would use.
-          value = ((IDoCollection) value).get();
-        }
-
-        // check if reading the 'type version' property
-        if (m_moduleContext.getTypeVersionAttributeName().equals(attributeName)) {
-          deserializeDoEntityVersionAttribute(entity, attributeName, value);
+        // normal attribute
+        AttributeType attributeType = findResolvedAttributeType(entity, attributeName, p.currentToken());
+        if (attributeType.isDoCollection()) {
+          DoNode<?> nodeValue = readAttributeValue(p, attributeType, attributeName);
+          // check if reading the 'contributions' property
+          if (m_moduleContext.getContributionsAttributeName().equals(attributeName)) {
+            //noinspection unchecked
+            m_doEntityDeserializerTypeStrategy.putContributions(entity, attributeName, ((AbstractDoCollection<?, Collection<?>>) nodeValue).get());
+          }
+          else {
+            entity.putNode(attributeName, nodeValue);
+          }
         }
         else {
+          Object value = readAttributeValue(p, attributeType, attributeName);
+          if (value instanceof IDoCollection) {
+            // special case: Java collections referenced by a DoValue are handled as DoList, so that nested elements are
+            //               deserialized into data object structures (i.e. Do-classes), rather than Maps, such as Jackson's
+            //               default collection deserializer would use.
+            value = ((IDoCollection) value).get();
+          }
           entity.put(attributeName, value);
         }
       }
@@ -235,7 +236,16 @@ public class DoEntityDeserializer extends StdDeserializer<IDoEntity> {
   protected AttributeType findResolvedFallbackAttributeType(IDoEntity entityInstance, String attributeName, JsonToken currentToken) {
     if (DoMapEntity.class.isAssignableFrom(m_handledClass)) {
       // DoMapEntity<T> structure is deserialized as typed Map<String, T>
+
+      JavaType entityType = findResolvedDoMapEntityType();
+      if (IDoCollection.class.isAssignableFrom(entityType.getRawClass())) {
+        return AttributeType.ofDoCollection(entityType);
+      }
+      else {
       return AttributeType.ofDoValue(findResolvedDoMapEntityType());
+
+    }
+
     }
     if (currentToken == JsonToken.START_OBJECT) {
       // fallback to default handling, if no attribute definition could be found

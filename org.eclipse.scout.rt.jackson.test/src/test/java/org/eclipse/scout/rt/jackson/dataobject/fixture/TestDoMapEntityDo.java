@@ -15,8 +15,10 @@ import javax.annotation.Generated;
 import org.eclipse.scout.rt.dataobject.DoMapEntity;
 import org.eclipse.scout.rt.dataobject.DoValue;
 import org.eclipse.scout.rt.dataobject.TypeName;
+import org.eclipse.scout.rt.dataobject.TypeVersion;
 
 @TypeName("TestDoMapEntity")
+@TypeVersion(JacksonFixtureTypeVersions.JacksonFixture_1_0_0.class)
 public class TestDoMapEntityDo extends DoMapEntity<TestItemDo> {
 
   public DoValue<Integer> count() {

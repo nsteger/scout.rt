@@ -43,6 +43,7 @@ import org.eclipse.scout.rt.dataobject.DoCollection;
 import org.eclipse.scout.rt.dataobject.DoEntity;
 import org.eclipse.scout.rt.dataobject.DoEntityBuilder;
 import org.eclipse.scout.rt.dataobject.DoList;
+import org.eclipse.scout.rt.dataobject.DoMapEntity;
 import org.eclipse.scout.rt.dataobject.DoSet;
 import org.eclipse.scout.rt.dataobject.DoValue;
 import org.eclipse.scout.rt.dataobject.IDataObject;
@@ -50,6 +51,8 @@ import org.eclipse.scout.rt.dataobject.IDoCollection;
 import org.eclipse.scout.rt.dataobject.IDoEntity;
 import org.eclipse.scout.rt.dataobject.IDoEntityContribution;
 import org.eclipse.scout.rt.dataobject.IValueFormatConstants;
+import org.eclipse.scout.rt.dataobject.TypeName;
+import org.eclipse.scout.rt.dataobject.TypeVersion;
 import org.eclipse.scout.rt.dataobject.fixture.FixtureHierarchicalLookupRowDo;
 import org.eclipse.scout.rt.dataobject.fixture.FixtureUuId;
 import org.eclipse.scout.rt.dataobject.lookup.LookupResponse;
@@ -57,6 +60,7 @@ import org.eclipse.scout.rt.dataobject.value.DateValueDo;
 import org.eclipse.scout.rt.dataobject.value.IntegerValueDo;
 import org.eclipse.scout.rt.jackson.dataobject.fixture.DoubleContributionFixtureDo;
 import org.eclipse.scout.rt.jackson.dataobject.fixture.ITestBaseEntityDo;
+import org.eclipse.scout.rt.jackson.dataobject.fixture.JacksonFixtureTypeVersions;
 import org.eclipse.scout.rt.jackson.dataobject.fixture.TestBigIntegerDo;
 import org.eclipse.scout.rt.jackson.dataobject.fixture.TestBinaryDo;
 import org.eclipse.scout.rt.jackson.dataobject.fixture.TestBinaryResourceDo;
@@ -1904,6 +1908,94 @@ public class JsonDataObjectsSerializationTest {
     assertEquals("value-1a", marshalled.get("mapAttribute1").get(0).getStringAttribute());
     assertEquals("value-2b", marshalled.get("mapAttribute2").get(1).getStringAttribute());
     assertEquals(Integer.valueOf(42), marshalled.getCount());
+  }
+
+  @Test
+  public void foo() throws Exception {
+
+    TestDoMapEntityDo mapDo = BEANS.get(TestDoMapEntityDo.class);
+    mapDo.put("namedItem3", createTestItemDo("id-1", "value-1"));
+
+    String json = s_dataObjectMapper.writeValueAsString(mapDo);
+    TestDoMapEntityDo marshalled = s_dataObjectMapper.readValue(json, TestDoMapEntityDo.class);
+    System.out.println(marshalled);
+
+  }
+
+  @TypeName("bsiscout.LocalizedText")
+  @TypeVersion(JacksonFixtureTypeVersions.JacksonFixture_1_0_0.class)
+  public static class LocalizedTextDo extends DoMapEntity<String> {
+
+//    public static LocalizedTextDo of(ILocalizedText text) {
+//      if (text == null) {
+//        return null;
+//      }
+//
+//      LocalizedTextDo textDo = BEANS.get(LocalizedTextDo.class);
+//      for (Entry<Locale, String> entry : text.getNormalizedTextMap().entrySet()) {
+//        textDo.put(entry.getKey().toLanguageTag(), entry.getValue());
+//      }
+//      return textDo;
+//    }
+//
+//    public Map<Locale, String> getTextMap() {
+//      Map<Locale, String> textMap = new HashMap<>();
+//      for (Entry<String, String> entry : all().entrySet()) {
+//        textMap.put(Locale.forLanguageTag(entry.getKey()), entry.getValue());
+//      }
+//      return textMap;
+//    }
+  }
+
+  @TypeName("studio.UserDefinedStepTexts")
+  @TypeVersion(JacksonFixtureTypeVersions.JacksonFixture_1_0_0.class)
+  public static class UserDefinedStepTextsDo extends DoMapEntity<LocalizedTextDo> {
+  }
+//  Json, welches deserialisiert werden soll:
+//
+//  {
+//    "_type": "studio.UserDefinedStepTexts",
+//      "_typeVersion": "bsiscout-22.0.0",
+//      "input_5fda94f7-7ad2-4985-b03b-bce08bac2dd5_name": {
+//    "_type": "bsiscout.LocalizedText",
+//        "de-CH": "Hallo Welt",
+//        "_typeVersion": "bsiscout-22.0.0"
+//  }
+//  }
+
+  @Test
+  public void foo2() throws Exception {
+
+    String json = "{\n"
+        + " \"_type\": \"studio.UserDefinedStepTexts\",\n"
+        + " \"_typeVersion\": \"jacksonFixture-1.0.0\",\n"
+        + " \"input_5fda94f7-7ad2-4985-b03b-bce08bac2dd5_name\": {\n"
+        + "  \"_type\": \"bsiscout.LocalizedText\",\n"
+        + "  \"de-CH\": \"Hallo Welt\",\n"
+        + "  \"_typeVersion\": \"jacksonFixture-1.0.0\"\n"
+        + " }\n"
+        + "}";
+
+    UserDefinedStepTextsDo obj = s_dataObjectMapper.readValue(json, UserDefinedStepTextsDo.class);
+    System.out.println(obj);
+  }
+
+  @TypeName("studio.UserDefinedStepTexts2")
+  @TypeVersion(JacksonFixtureTypeVersions.JacksonFixture_1_0_0.class)
+  public static class UserDefinedStepTexts2Do extends DoMapEntity<DoList> {
+  }
+
+  @Test
+  public void foo3() throws Exception {
+
+    String json = "{\n"
+        + " \"_type\": \"studio.UserDefinedStepTexts2\",\n"
+        + " \"_typeVersion\": \"jacksonFixture-1.0.0\",\n"
+        + " \"input_5fda94f7-7ad2-4985-b03b-bce08bac2dd5_name\": [\"foo\", \"bar\"]\n"
+        + "}";
+
+    UserDefinedStepTexts2Do obj = s_dataObjectMapper.readValue(json, UserDefinedStepTexts2Do.class);
+    System.out.println(obj);
   }
 
   // ------------------------------------ polymorphic test cases ------------------------------------
