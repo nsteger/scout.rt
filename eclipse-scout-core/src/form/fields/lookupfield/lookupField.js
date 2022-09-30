@@ -65,7 +65,7 @@ export function createTableCell(lookupRow, desc, tableRowData) {
       cell.font = lookupRow.font;
     }
   } else {
-    cell.text = tableRowData[desc.propertyName];
+    cell.value = tableRowData[desc.propertyName];
   }
 
   return cell;

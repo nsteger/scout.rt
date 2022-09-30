@@ -56,7 +56,7 @@ export default class TableProposalChooser extends ProposalChooser {
     if (descriptor.width && descriptor.width > 0) { // 0 = default
       width = descriptor.width;
     }
-    return scout.create(Column, {
+    return scout.create(scout.nvl(descriptor.columnObjectType, Column), {
       session: this.session,
       text: descriptor.text,
       cssClass: scout.nvl(descriptor.cssClass, null),
@@ -66,7 +66,8 @@ export default class TableProposalChooser extends ProposalChooser {
       fixedPosition: scout.nvl(descriptor.fixedPosition, false),
       horizontalAlignment: scout.nvl(descriptor.horizontalAlignment, this.smartField.gridData.horizontalAlignment),
       visible: scout.nvl(descriptor.visible, true),
-      htmlEnabled: scout.nvl(descriptor.htmlEnabled, false)
+      htmlEnabled: scout.nvl(descriptor.htmlEnabled, false),
+      headerIconId: scout.nvl(descriptor.headerIconId, null)
     });
   }
 
