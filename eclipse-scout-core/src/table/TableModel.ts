@@ -9,12 +9,12 @@
  *     BSI Business Systems Integration AG - initial API and implementation
  */
 import {
-  Column, ColumnModel, Filter, KeyStroke, KeyStrokeModel, Menu, MenuModel, Status, TableCompactHandler, TableControl, TableControlModel, TableRow, TableRowModel, TableSelectionHandler, TableTileGridMediator, TableUserFilterModel, Tile,
-  WidgetModel
+  Column, ColumnModel, Filter, KeyStroke, KeyStrokeModel, Menu, MenuModel, Status, TableCompactHandler, TableControl, TableControlModel, TableRow, TableSelectionHandler, TableTileGridMediator, TableUserFilterModel, Tile, WidgetModel
 } from '../index';
 import {TableCheckableStyle, TableGroupingStyle, TableHierarchicalStyle} from './Table';
 import {RefModel} from '../types';
 import {DragAndDropType} from '../util/dragAndDrop';
+import {TableRowData} from './TableRowModel';
 
 export default interface TableModel extends WidgetModel {
   /**
@@ -115,7 +115,7 @@ export default interface TableModel extends WidgetModel {
    */
   footerVisible?: boolean;
   filters?: Filter<TableRow>[] | RefModel<TableUserFilterModel>[];
-  rows?: TableRow[] | RefModel<TableRowModel>[];
+  rows?: TableRow[] | TableRowData[];
   maxRowCount?: number;
   /**
    * Configures whether the table shows tooltips if the cell content is truncated.

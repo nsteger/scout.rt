@@ -35,6 +35,10 @@ export type JQueryMouseWheelEvent<TDelegateTarget = any, TData = any, TCurrentTa
 
 declare global {
 
+  interface Window {
+    abc(): void;
+  }
+
   interface DebounceOptions {
     /**
      * Waiting time in milliseconds before the function is executed. Default is 250.

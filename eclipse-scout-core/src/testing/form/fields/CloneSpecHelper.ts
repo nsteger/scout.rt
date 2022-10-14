@@ -8,16 +8,25 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
+import {Session, Widget} from '../../../index';
+import 'jasmine';
+
 export default class CloneSpecHelper {
-  constructor(session) {
+  session: Session;
+
+  constructor(session: Session) {
     this.session = session;
   }
 
-  validateClone(original, clone, localProperties) {
+  validateClone(original: Widget, clone: Widget) {
+    // @ts-expect-error
     let properties = original._cloneProperties.filter(prop => {
+        // @ts-expect-error
         return original._widgetProperties.indexOf(prop) < 0;
       }),
+      // @ts-expect-error
       widgetProperties = original._cloneProperties.filter(prop => {
+        // @ts-expect-error
         return original._widgetProperties.indexOf(prop) > -1;
       });
 

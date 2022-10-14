@@ -8,11 +8,32 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
+import {RemoteEvent} from '../index';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace jasmine {
+  interface Matchers<T> {
+    toContainEvents(events: RemoteEvent | RemoteEvent[]): void;
+
+    toContainEventsExactly(events: RemoteEvent | RemoteEvent[]): void;
+
+    toContainEventTypesExactly(events: string | string[]): void;
+
+    allToHaveClass(elements: JQuery | JQuery[]): void;
+
+    anyToHaveClass(elements: JQuery | JQuery[]): void;
+  }
+}
+
+interface CustomMatcherResult {
+  pass: boolean;
+  message?: string | undefined;
+}
 
 const jasmineScoutMatchers = {
   /**
    * Checks if given request contains expected events, order does not matter.
-   * @actual json request, may be obtained by mostRecentJsonRequest
+   * Actual json request, may be obtained by mostRecentJsonRequest
    */
   toContainEvents: (util, customEqualityTesters) => ({
     compare: (actual, expected) => {
@@ -22,18 +43,17 @@ const jasmineScoutMatchers = {
       if (!Array.isArray(expected)) {
         expected = [expected];
       }
-      let result = {},
-        i;
+      let result = {} as CustomMatcherResult;
 
       let actualEvents = [];
       if (actual) {
-        for (i = 0; i < actual.events.length; i++) {
+        for (let i = 0; i < actual.events.length; i++) {
           actualEvents.push(actual.events[i]);
         }
       }
 
       result.pass = true;
-      for (i = 0; i < expected.length; i++) {
+      for (let i = 0; i < expected.length; i++) {
         // Prototype may be Event. If that's the case we need to convert, otherwise equals will fail
         if (Object.getPrototypeOf(expected[i]) !== Object.prototype) {
           expected[i] = $.parseJSON(JSON.stringify(expected[i]));
@@ -51,7 +71,7 @@ const jasmineScoutMatchers = {
 
   /**
    * Checks if given request contains all the expected events in the given order
-   * @actual json request, may be obtained by mostRecentJsonRequest
+   * Actual json request, may be obtained by mostRecentJsonRequest
    */
   toContainEventsExactly: (util, customEqualityTesters) => ({
     compare: (actual, expected) => {
@@ -61,18 +81,17 @@ const jasmineScoutMatchers = {
       if (!Array.isArray(expected)) {
         expected = [expected];
       }
-      let result = {},
-        i;
+      let result = {} as CustomMatcherResult;
 
       let actualEvents = [];
       if (actual) {
-        for (i = 0; i < actual.events.length; i++) {
+        for (let i = 0; i < actual.events.length; i++) {
           actualEvents.push(actual.events[i]);
         }
       }
 
       result.pass = true;
-      for (i = 0; i < expected.length; i++) {
+      for (let i = 0; i < expected.length; i++) {
         // Prototype may be Event. If that's the case we need to convert, otherwise equals will fail
         if (Object.getPrototypeOf(expected[i]) !== Object.prototype) {
           expected[i] = $.parseJSON(JSON.stringify(expected[i]));
@@ -90,7 +109,7 @@ const jasmineScoutMatchers = {
 
   /**
    * Checks if given request contains events with the expected event types in the given order
-   * @actual json request, may be obtained by mostRecentJsonRequest
+   * Actual json request, may be obtained by mostRecentJsonRequest
    */
   toContainEventTypesExactly: (util, customEqualityTesters) => ({
     compare: (actual, expected) => {
@@ -100,7 +119,7 @@ const jasmineScoutMatchers = {
       if (!Array.isArray(expected)) {
         expected = [expected];
       }
-      let result = {};
+      let result = {} as CustomMatcherResult;
 
       let actualEventTypes = [];
       if (actual) {
@@ -136,7 +155,7 @@ const jasmineScoutMatchers = {
         pass: actual.every($elem => {
           return $elem.hasClass(expected);
         })
-      };
+      } as CustomMatcherResult;
 
       if (!result.pass) {
         result.message = 'Expected ' + actual + ' all to have ' + expected + ' as classes.';
@@ -163,7 +182,7 @@ const jasmineScoutMatchers = {
         pass: actual.some($elem => {
           return $elem.hasClass(expected);
         })
-      };
+      } as CustomMatcherResult;
 
       if (!result.pass) {
         result.message = 'Expected any ' + actual + ' to have ' + expected + ' as classes.';

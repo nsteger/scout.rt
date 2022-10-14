@@ -8,27 +8,28 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import $ from 'jquery';
-import {Menu, scout} from '../../index';
+import {Menu, MenuModel, scout, Session} from '../../index';
 
 export default class MenuSpecHelper {
-  constructor(session) {
+  session: Session;
+
+  constructor(session: Session) {
     this.session = session;
   }
 
-  createModel(text, iconId, menuTypes) {
-    let model = createSimpleModel('Menu', this.session);
-    $.extend(model, {
+  createModel(text: string, iconId: string, menuTypes: string[]): MenuModel {
+    return {
+      objectType: Menu,
+      parent: this.session.desktop,
       text: text,
       iconId: iconId,
       menuTypes: menuTypes,
       visible: true
-    });
-    return model;
+    };
   }
 
-  createMenu(model) {
-    model = model || {};
+  createMenu(model: MenuModel): Menu {
+    model = model || {} as MenuModel;
     model.objectType = model.objectType || Menu;
     model.session = this.session;
     model.parent = this.session.desktop;

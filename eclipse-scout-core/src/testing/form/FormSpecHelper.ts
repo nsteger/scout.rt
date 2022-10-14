@@ -8,11 +8,15 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
-import {arrays, Column, Form, GroupBox, Mode, ModeSelector, RadioButton, RadioButtonGroup, scout, StringField, TabBox, TabItem, Table, TableField} from '../../index';
+import {Action, arrays, Column, Form, FormModel, GroupBox, Mode, ModeSelector, RadioButton, RadioButtonGroup, scout, Session, StringField, TabBox, TabItem, Table, TableField, Widget} from '../../index';
 import $ from 'jquery';
+import {ObjectType} from '../../ObjectFactory';
 
+// FIXME TS use FormFieldModel for return types
 export default class FormSpecHelper {
-  constructor(session) {
+  session: Session;
+
+  constructor(session: Session) {
     this.session = session;
   }
 
@@ -20,30 +24,30 @@ export default class FormSpecHelper {
     if (!this.session || !this.session.$entryPoint) {
       return;
     }
-    let $messageBoxes = this.session.$entryPoint.find('.messagebox .box-button');
-    for (let i = 0; i < $messageBoxes.length; i++) {
-      scout.widget($messageBoxes[i]).doAction();
+    let $messageBoxButtons = this.session.$entryPoint.find('.messagebox .box-button');
+    for (let i = 0; i < $messageBoxButtons.length; i++) {
+      scout.widget($messageBoxButtons[i], Action).doAction();
     }
   }
 
-  createViewWithOneField(model) {
+  createViewWithOneField(model: FormModel): Form {
     let form = this.createFormWithOneField(model);
     form.displayHint = Form.DisplayHint.VIEW;
     return form;
   }
 
-  createFormWithOneField(model) {
+  createFormWithOneField(model: FormModel): Form {
     let defaults = {
       parent: this.session.desktop
     };
     model = $.extend({}, defaults, model);
     let form = scout.create(Form, model);
     let rootGroupBox = this.createGroupBoxWithFields(form, 1);
-    form._setRootGroupBox(rootGroupBox);
+    form.setRootGroupBox(rootGroupBox);
     return form;
   }
 
-  createFormWithFieldsAndTabBoxes(model) {
+  createFormWithFieldsAndTabBoxes(model: FormModel): Form {
     let fieldModelPart = (id, mandatory) => ({
         id: id,
         objectType: StringField,
@@ -127,15 +131,15 @@ export default class FormSpecHelper {
 
     model = $.extend({}, defaults, model);
     let form = scout.create(Form, model);
-    form.widget('TableFieldB5').table.insertRows([{cells: arrays.init(2)}, {cells: arrays.init(2)}]);
+    form.widget('TableFieldB5', TableField).table.insertRows([{cells: arrays.init(2, null)}, {cells: arrays.init(2, null)}]);
     return form;
   }
 
-  createGroupBoxWithOneField(parent, numFields) {
+  createGroupBoxWithOneField(parent: Widget): GroupBox {
     return this.createGroupBoxWithFields(parent, 1);
   }
 
-  createGroupBoxWithFields(parent, numFields) {
+  createGroupBoxWithFields(parent: Widget, numFields: number): GroupBox {
     parent = scout.nvl(parent, this.session.desktop);
     numFields = scout.nvl(numFields, 1);
     let
@@ -152,7 +156,7 @@ export default class FormSpecHelper {
     return groupBox;
   }
 
-  createRadioButtonGroup(parent, numRadioButtons) {
+  createRadioButtonGroup(parent?: Widget, numRadioButtons?: number): RadioButtonGroup {
     parent = scout.nvl(parent, this.session.desktop);
     numRadioButtons = scout.nvl(numRadioButtons, 2);
     let fields = [];
@@ -167,33 +171,35 @@ export default class FormSpecHelper {
     });
   }
 
-  createFormWithFields(parent, isModal, numFields) {
+  createFormWithFields(parent: Widget, isModal: boolean, numFields?: number): Form {
     parent = scout.nvl(parent, this.session.desktop);
     let form = scout.create(Form, {
       parent: parent,
       displayHint: isModal ? 'dialog' : 'view'
     });
     let rootGroupBox = this.createGroupBoxWithFields(form, numFields);
-    form._setRootGroupBox(rootGroupBox);
+    form.setRootGroupBox(rootGroupBox);
     return form;
   }
 
-  createFieldModel(objectType, parent, modelProperties) {
+  createFieldModel(objectType: ObjectType, parent: Widget, modelProperties: Record<string, any>) {
     parent = scout.nvl(parent, this.session.desktop);
-    let model = createSimpleModel(objectType || 'StringField', this.session);
-    model.parent = parent;
+    let model = {
+      objectType: objectType || StringField,
+      parent: parent
+    };
     if (modelProperties) {
       $.extend(model, modelProperties);
     }
     return model;
   }
 
-  createField(objectType, parent, modelProperties) {
+  createField(objectType: ObjectType, parent: Widget, modelProperties: Record<string, any>) {
     parent = parent || this.session.desktop;
     return scout.create(objectType, this.createFieldModel(objectType, parent, modelProperties));
   }
 
-  createModeSelector(parent, numModes) {
+  createModeSelector(parent?: Widget, numModes?: number): ModeSelector {
     parent = scout.nvl(parent, this.session.desktop);
     numModes = scout.nvl(numModes, 2);
     let modes = [];
@@ -207,5 +213,4 @@ export default class FormSpecHelper {
       modes: modes
     });
   }
-
 }

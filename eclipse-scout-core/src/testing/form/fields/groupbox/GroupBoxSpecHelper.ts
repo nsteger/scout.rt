@@ -8,9 +8,10 @@
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
+import 'jasmine';
 
 export default class GroupBoxSpecHelper {
-  static assertGridData(x, y, w, h, gd) {
+  static assertGridData(x: number, y: number, w, h, gd) {
     expect(gd.x).toEqual(x); // GridData[x]
     expect(gd.y).toEqual(y); // GridData[y]
     expect(gd.w).toEqual(w); // GridData[w]

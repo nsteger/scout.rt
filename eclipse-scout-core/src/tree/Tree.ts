@@ -246,7 +246,7 @@ export default class Tree extends Widget implements TreeModel {
    * ensures that the attribute childNodeIndex is set. By default we use the order of the nodes array as index
    * but only if childNodeIndex is undefined.
    */
-  protected _ensureTreeNodes(nodes: TreeNode[] | TreeNodeModel[]) {
+  protected _ensureTreeNodes(nodes: (TreeNode | TreeNodeModel)[]) {
     let node;
     for (let i = 0; i < nodes.length; i++) {
       node = nodes[i];
@@ -2200,7 +2200,7 @@ export default class Tree extends Widget implements TreeModel {
     this.insertNodes([node], parentNode);
   }
 
-  insertNodes(nodes: TreeNode | TreeNode[] | TreeNodeModel[] | TreeNodeModel, parentNode?: TreeNode) {
+  insertNodes(nodes: TreeNode | TreeNodeModel | (TreeNode | TreeNodeModel)[], parentNode?: TreeNode) {
     let treeNodes = arrays.ensure(nodes).slice() as TreeNode[];
     if (treeNodes.length === 0) {
       return;

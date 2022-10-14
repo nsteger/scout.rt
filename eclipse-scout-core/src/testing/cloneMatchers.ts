@@ -1,19 +1,25 @@
 /*
- * Copyright (c) 2010-2019 BSI Business Systems Integration AG.
+ * Copyright (c) 2010-2022 BSI Business Systems Integration AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     BSI Business Systems Integration AG - initial API and implementation
  */
+
+interface CustomMatcherResult {
+  pass: boolean;
+  message?: string | undefined;
+}
+
 const jasmineScoutCloneMatchers = {
   definedProperty: (util, customEqualityTesters) => ({
     compare: (original, clone, property) => {
       let result = {
         pass: clone[property] !== undefined
-      };
+      } as CustomMatcherResult;
       if (!result.pass) {
         result.message = clone.objectType + ' does not have the property ' + property + ' [original:' + original[property] + ', clone:' + clone[property] + ']!';
       }
@@ -25,12 +31,11 @@ const jasmineScoutCloneMatchers = {
     compare: (original, clone, property) => {
       let result = {
         pass: original[property] === clone[property]
-      };
+      } as CustomMatcherResult;
       if (!result.pass) {
         result.message = 'property \'' + property + '\' is not the same [original: \'' + original[property] + '\', clone: \'' + clone[property] + '\'].';
       }
       return result;
-
     }
   }),
   widgetCloneProperty: (util, customEqualityTesters) => ({
